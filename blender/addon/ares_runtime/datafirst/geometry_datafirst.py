@@ -8,6 +8,7 @@ except Exception:  # pragma: no cover
     bpy = None
 
 from blender.addon.ares_runtime.helpers.object_utils import apply_modifier
+from blender.addon.ares_runtime.helpers.undo_utils import push_undo_step
 
 
 def apply_modifier(obj_name: str, mod_type: str, settings: Dict[str, Any]) -> Dict[str, Any]:
@@ -16,4 +17,5 @@ def apply_modifier(obj_name: str, mod_type: str, settings: Dict[str, Any]) -> Di
     obj = bpy.data.objects.get(obj_name)
     if obj is None:
         return {"ok": False, "error": f"Object '{obj_name}' not found"}
+    push_undo_step("apply_modifier")
     return apply_modifier(obj, mod_type, settings)

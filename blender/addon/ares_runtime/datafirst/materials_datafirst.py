@@ -8,6 +8,7 @@ except Exception:  # pragma: no cover
     bpy = None
 
 from blender.addon.ares_runtime.helpers import material_utils
+from blender.addon.ares_runtime.helpers.undo_utils import push_undo_step
 
 
 def assign_material(obj_name: str, material_name: str, color: List[float]) -> Dict[str, Any]:
@@ -16,6 +17,7 @@ def assign_material(obj_name: str, material_name: str, color: List[float]) -> Di
     obj = bpy.data.objects.get(obj_name)
     if obj is None:
         return {"ok": False, "error": f"Object '{obj_name}' not found"}
+    push_undo_step("assign_material")
     mat = material_utils.ensure_material(material_name)
     if isinstance(mat, dict):  # error response
         return mat

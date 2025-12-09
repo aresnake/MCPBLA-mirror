@@ -22,6 +22,9 @@ class BridgePoolV2:
         payload = batch.to_dict()
         return self.router.route("batch.execute", payload)
 
+    def receive_event(self, payload: dict) -> None:
+        self.router.receive(payload)
+
 
 _DEFAULT_POOL_V2: Optional[BridgePoolV2] = None
 

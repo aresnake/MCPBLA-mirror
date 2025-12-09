@@ -50,3 +50,29 @@ class ActionBatch:
 
     def to_dict(self) -> Dict[str, Any]:
         return {"atomic": self.atomic, "actions": [a.to_dict() for a in self.actions]}
+
+
+@dataclass
+class EventACKMessage:
+    event: str
+    correlation_id: str
+    data: Dict[str, Any]
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {"event": self.event, "correlation_id": self.correlation_id, "data": self.data}
+
+
+@dataclass
+class ActionACKMessage:
+    action: str
+    correlation_id: str
+    status: str
+    data: Optional[Dict[str, Any]] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "action": self.action,
+            "correlation_id": self.correlation_id,
+            "status": self.status,
+            "data": self.data or {},
+        }

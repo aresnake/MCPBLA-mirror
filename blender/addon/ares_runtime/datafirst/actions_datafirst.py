@@ -8,11 +8,13 @@ except Exception:  # pragma: no cover
     bpy = None
 
 from blender.addon.ares_runtime.helpers.object_utils import ensure_mesh_object, set_object_location
+from blender.addon.ares_runtime.helpers.undo_utils import push_undo_step
 
 
 def create_cube(name: str, size: float) -> Dict[str, Any]:
     if bpy is None:
         return {"ok": False, "error": "bpy unavailable"}
+    push_undo_step("create_cube")
     half = size / 2.0
     verts = [
         (-half, -half, -half),
@@ -44,6 +46,7 @@ def move_object(name: str, translation: Dict[str, float]) -> Dict[str, Any]:
     obj = bpy.data.objects.get(name)
     if obj is None:
         return {"ok": False, "error": f"Object '{name}' not found"}
+    push_undo_step("move_object")
     obj.location.x += float(translation.get("x", 0))
     obj.location.y += float(translation.get("y", 0))
     obj.location.z += float(translation.get("z", 0))
