@@ -4,13 +4,22 @@ from typing import Any, Dict
 
 try:
     from . import actions
-    from blender.addon.ares_runtime.datafirst import actions_datafirst, materials_datafirst, geometry_datafirst, nodes_datafirst
+    from blender.addon.ares_runtime.datafirst import (
+        actions_datafirst,
+        materials_datafirst,
+        geometry_datafirst,
+        nodes_datafirst,
+        scene_datafirst,
+        render_datafirst,
+    )
 except Exception:  # pragma: no cover
     actions = None
     actions_datafirst = None
     materials_datafirst = None
     geometry_datafirst = None
     nodes_datafirst = None
+    scene_datafirst = None
+    render_datafirst = None
 
 
 def handle_route(route: str, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -31,6 +40,12 @@ def handle_route(route: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     if route == "node.operation.v2":
         params = payload.get("payload") or payload.get("params") or payload
         return nodes_datafirst.add_node(params.get("material"), params.get("operation", "ShaderNodeTexNoise")) if nodes_datafirst else {"ok": False, "error": "runtime not available"}
+    if route == "scene.snapshot.v2":
+        params = payload.get("payload") or payload.get("params") or payload
+        return scene_datafirst.snapshot(params.get("session_id")) if scene_datafirst else {"ok": False, "error": "runtime not available"}
+    if route == "render.preview.v2":
+        params = payload.get("payload") or payload.get("params") or payload
+        return render_datafirst.render_preview(params or {}) if render_datafirst else {"ok": False, "error": "runtime not available"}
     if route == "batch.execute":
         actions_list = payload.get("actions", [])
         results = []
