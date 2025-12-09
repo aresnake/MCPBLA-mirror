@@ -19,6 +19,7 @@ def build_tool_registry(workspace_root: Path) -> Dict[str, Tool]:
         modeler_agent_v3_tools,
         shader_agent_v3_tools,
         geo_agent_v3_tools,
+        animation_agent_v3_tools,
     )
 
     modules: Iterable[Iterable[Tool]] = [
@@ -30,6 +31,7 @@ def build_tool_registry(workspace_root: Path) -> Dict[str, Tool]:
         modeler_agent_v3_tools.get_tools(),
         shader_agent_v3_tools.get_tools(),
         geo_agent_v3_tools.get_tools(),
+        animation_agent_v3_tools.get_tools(),
     ]
     for tool_list in modules:
         for tool in tool_list:
