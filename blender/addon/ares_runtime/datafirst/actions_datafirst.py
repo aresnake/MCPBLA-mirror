@@ -7,6 +7,8 @@ try:
 except Exception:  # pragma: no cover
     bpy = None
 
+from blender.addon.ares_runtime.helpers.object_utils import ensure_mesh_object, set_object_location
+
 
 def create_cube(name: str, size: float) -> Dict[str, Any]:
     if bpy is None:
@@ -30,11 +32,9 @@ def create_cube(name: str, size: float) -> Dict[str, Any]:
         (1, 5, 7, 3),
         (0, 2, 6, 4),
     ]
-    mesh = bpy.data.meshes.new(name)
-    mesh.from_pydata(verts, [], faces)
-    mesh.update()
-    obj = bpy.data.objects.new(name, mesh)
-    bpy.context.scene.collection.objects.link(obj)
+    obj = ensure_mesh_object(name, verts, faces)
+    if isinstance(obj, dict) and not obj.get("ok", True):
+        return obj
     return {"ok": True, "data": {"name": obj.name, "size": size}}
 
 

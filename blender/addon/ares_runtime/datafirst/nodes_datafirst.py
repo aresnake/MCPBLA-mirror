@@ -7,6 +7,8 @@ try:
 except Exception:  # pragma: no cover
     bpy = None
 
+from blender.addon.ares_runtime.helpers.node_utils import safe_new_node
+
 
 def add_node(material_name: str, node_type: str) -> Dict[str, Any]:
     if bpy is None:
@@ -15,6 +17,7 @@ def add_node(material_name: str, node_type: str) -> Dict[str, Any]:
     if mat is None:
         mat = bpy.data.materials.new(material_name)
         mat.use_nodes = True
-    nodes = mat.node_tree.nodes
-    node = nodes.new(node_type)
+    node = safe_new_node(mat, node_type)
+    if isinstance(node, dict):
+        return node
     return {"ok": True, "data": {"material": mat.name, "node": node.name, "type": node.bl_idname}}

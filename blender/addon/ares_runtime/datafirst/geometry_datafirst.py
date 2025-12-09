@@ -7,6 +7,8 @@ try:
 except Exception:  # pragma: no cover
     bpy = None
 
+from blender.addon.ares_runtime.helpers.object_utils import apply_modifier
+
 
 def apply_modifier(obj_name: str, mod_type: str, settings: Dict[str, Any]) -> Dict[str, Any]:
     if bpy is None:
@@ -14,11 +16,4 @@ def apply_modifier(obj_name: str, mod_type: str, settings: Dict[str, Any]) -> Di
     obj = bpy.data.objects.get(obj_name)
     if obj is None:
         return {"ok": False, "error": f"Object '{obj_name}' not found"}
-    mod = obj.modifiers.new(name=f"{mod_type}_auto", type=str(mod_type).upper())
-    for key, value in settings.items():
-        if hasattr(mod, key):
-            try:
-                setattr(mod, key, value)
-            except Exception:
-                continue
-    return {"ok": True, "data": {"object": obj.name, "modifier": mod.name, "type": mod.type}}
+    return apply_modifier(obj, mod_type, settings)
