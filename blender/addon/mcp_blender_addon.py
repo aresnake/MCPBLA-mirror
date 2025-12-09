@@ -16,6 +16,7 @@ except ImportError:  # pragma: no cover - Blender runtime only
 
 if bpy:
     from .bridge_client import BridgeClient
+    from .ui.panel_diagnostics import CLASSES as DIAG_CLASSES, register as register_diag, unregister as unregister_diag
 
     def get_or_create_cube(name: str = "Cube"):
         """Return an existing cube by name or create one at the origin."""
@@ -220,8 +221,10 @@ if bpy:
     def register():
         for cls in _CLASSES:
             bpy.utils.register_class(cls)
+        register_diag()
 
     def unregister():
+        unregister_diag()
         for cls in reversed(_CLASSES):
             bpy.utils.unregister_class(cls)
 
