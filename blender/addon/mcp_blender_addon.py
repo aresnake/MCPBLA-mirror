@@ -161,6 +161,32 @@ if bpy:
             layout.operator("mcp.send_real_snapshot", text="Send Real Scene Snapshot")
             layout.operator("mcp.run_demo_task", text="Run Demo Task")
             layout.operator("mcp.run_demo_task_in_blender", text="Run Demo Task in Blender")
+            layout.operator("mcp.full_reload_test", text="Run Full Studio Test")
+
+    class ARES_OT_full_reload_test(bpy.types.Operator):
+        bl_idname = "mcp.full_reload_test"
+        bl_label = "Run Full Studio Test"
+        bl_description = "Trigger full studio test via MCP tool"
+
+        def execute(self, context):  # noqa: ANN001
+            client = BridgeClient()
+            try:
+                result = client.run_tool("studio_full_test", {})
+                self.report({"INFO"}, f"Studio test: {result}")
+            except Exception as exc:  # noqa: BLE001
+                self.report({"ERROR"}, f"Studio test failed: {exc}")
+                return {"CANCELLED"}
+            return {"FINISHED"}
+
+    class ARES_MT_diagnostics(bpy.types.Menu):
+        bl_label = "ARES Diagnostics"
+        bl_idname = "ARES_MT_diagnostics"
+
+        def draw(self, context):  # noqa: ANN001
+            layout = self.layout
+            layout.operator("mcp.ping_server", text="Ping MCP Server")
+            layout.operator("mcp.send_real_snapshot", text="Send Real Scene Snapshot")
+            layout.operator("mcp.full_reload_test", text="Run Full Studio Test")
 
     class MCP_OT_SendRealSnapshot(bpy.types.Operator):
         bl_idname = "mcp.send_real_snapshot"
@@ -186,6 +212,8 @@ if bpy:
         MCP_OT_SendRealSnapshot,
         MCP_OT_RunDemoTask,
         MCP_OT_RunDemoTaskInBlender,
+        ARES_OT_full_reload_test,
+        ARES_MT_diagnostics,
         MCP_PT_Panel,
     )
 
