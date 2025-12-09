@@ -11,13 +11,14 @@ from server.tools.base import Tool
 def build_tool_registry(workspace_root: Path) -> Dict[str, Tool]:
     """Aggregate tools from submodules into a single registry."""
     registry: Dict[str, Tool] = {}
-    from server.tools import action_tools, orchestrator_tools, scenegraph_tools
+    from server.tools import action_tools, orchestrator_tools, scenegraph_tools, orchestrator_v3_tools
 
     modules: Iterable[Iterable[Tool]] = [
         blender_tools.get_tools(workspace_root),
         orchestrator_tools.get_tools(),
         action_tools.get_tools(),
         scenegraph_tools.get_tools(),
+        orchestrator_v3_tools.get_tools(),
     ]
     for tool_list in modules:
         for tool in tool_list:
