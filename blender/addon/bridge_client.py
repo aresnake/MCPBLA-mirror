@@ -50,21 +50,22 @@ class BridgeClient:
         return self._request("GET", "/tools")
 
     def send_dummy_snapshot(self) -> Dict[str, Any]:
-        # Même payload que la démo Python qui marche déjà
         payload = {
             "session_id": "demo_session",
-            "snapshot": {
-                "objects": [
-                    {
-                        "name": "Cube",
-                        "type": "MESH",
-                        "location": [0.0, 0.0, 0.0],
-                    }
-                ],
-                "metadata": {"source": "blender_addon_stub"},
-            },
+            "objects": [
+                {
+                    "name": "Cube",
+                    "type": "MESH",
+                    "location": [0.0, 0.0, 0.0],
+                }
+            ],
+            "metadata": {"source": "blender_addon_stub"},
         }
         return self._request("POST", "/blender/scene_snapshot", payload)
+
+    def send_snapshot(self, snapshot: Dict[str, Any]) -> Dict[str, Any]:
+        """Send a data-first snapshot to the MCP server."""
+        return self._request("POST", "/blender/scene_snapshot", snapshot)
 
     def run_tool(self, tool_name: str, arguments: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         payload = {"arguments": arguments or {}}

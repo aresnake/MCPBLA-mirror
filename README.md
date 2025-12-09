@@ -21,11 +21,16 @@ python -m venv .venv
 pip install -e .[dev]
 ```
 
-### Run the MCP server
+### Run the MCP server (local)
 ```bash
+# optional: export config overrides
+set MCP_PORT=8000
+set MCP_HOST=127.0.0.1
+set MCP_WORKSPACE=D:\MCPBLA
 python scripts/start_mcp_server.py
-# server will listen on http://127.0.0.1:8000 by default
+# serves FastAPI on http://127.0.0.1:8000 by default
 ```
+Entrypoint: `scripts/start_mcp_server.py` bootstraps `server.mcp_server:create_app()`, which registers all tools via `server.tools.registry`.
 
 ### Demo: connect and send a snapshot (no Blender required)
 ```bash
@@ -38,6 +43,16 @@ Set `MCP_SERVER_URL` if your server is running elsewhere (default `http://127.0.
 ```bash
 python -m pytest
 ```
+
+## Connect MCP hosts (Claude Desktop / Claude Code)
+- Example configs live in `mcp/claude_desktop_config.example.json` and `mcp/claude_code_config.example.json`.
+- Both start the MCP server via `python -m scripts.start_mcp_server` and point hosts to `http://127.0.0.1:8000` (override with `MCP_PORT`/`MCP_HOST`).
+- Copy the relevant example into your host’s MCP config location and adjust `MCP_WORKSPACE`/ports if needed.
+
+## Documentation
+- Architecture: `docs/ARCHITECTURE_MDCPBLA.md`
+- Blender bridge: `docs/BRIDGE_BLENDER_OVERVIEW.md`
+- Tests: `docs/TESTS_MCPBLA.md`
 
 ## Orchestrator & Agents
 
