@@ -50,6 +50,7 @@ class BridgeClient:
         return self._request("GET", "/tools")
 
     def send_dummy_snapshot(self) -> Dict[str, Any]:
+        """Send a minimal demo snapshot without requiring Blender runtime."""
         payload = {
             "session_id": "demo_session",
             "objects": [

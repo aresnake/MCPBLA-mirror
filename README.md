@@ -32,6 +32,33 @@ python scripts/start_mcp_server.py
 ```
 Entrypoint: `scripts/start_mcp_server.py` bootstraps `server.mcp_server:create_app()`, which registers all tools via `server.tools.registry`.
 
+### Quick demo (dummy snapshot)
+```bash
+# 1) install in dev mode
+pip install -e .[dev]
+
+# 2) start MCP server (new terminal)
+set MCP_PORT=8000
+set MCP_HOST=127.0.0.1
+set MCP_WORKSPACE=D:\MCPBLA
+python scripts/start_mcp_server.py
+
+# 3) send a dummy snapshot from another terminal
+python scripts/demo_dummy_snapshot.py
+```
+You should see a JSON response similar to:
+```json
+{
+  "status": "stored",
+  "session_id": "demo_session",
+  "objects_count": 1,
+  "metadata": {
+    "source": "blender_addon_stub"
+  }
+}
+```
+This verifies the bridge HTTP path without launching Blender.
+
 ### Demo: connect and send a snapshot (no Blender required)
 ```bash
 python blender/scripts/demo_connect.py
