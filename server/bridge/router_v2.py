@@ -12,6 +12,8 @@ class RouterV2:
         self.event_handler: Optional[Callable[[dict], Any]] = None
 
     def route(self, route: str, payload: dict) -> Any:
+        if payload.get("type") == "event" and self.event_handler:
+            return self.event_handler(payload)
         if not self.handler:
             raise RuntimeError("RouterV2 handler not configured")
         attempts = 0

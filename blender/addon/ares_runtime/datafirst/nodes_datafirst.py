@@ -8,6 +8,7 @@ except Exception:  # pragma: no cover
     bpy = None
 
 from blender.addon.ares_runtime.helpers.node_utils import safe_new_node
+from blender.addon.bridge.event_emitter import emit_event
 
 
 def add_node(material_name: str, node_type: str) -> Dict[str, Any]:
@@ -20,4 +21,9 @@ def add_node(material_name: str, node_type: str) -> Dict[str, Any]:
     node = safe_new_node(mat, node_type)
     if isinstance(node, dict):
         return node
-    return {"ok": True, "data": {"material": mat.name, "node": node.name, "type": node.bl_idname}}
+    result = {"ok": True, "data": {"material": mat.name, "node": node.name, "type": node.bl_idname}}
+    try:
+        emit_event("node.added", {"material": mat.name, "node": node.name, "type": node.bl_idname})
+    except Exception:
+        pass
+    return result

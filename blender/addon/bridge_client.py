@@ -77,3 +77,9 @@ class BridgeClient:
     def run_task(self, instruction: str) -> Dict[str, Any]:
         payload = {"arguments": {"instruction": instruction}}
         return self._request("POST", "/tools/run_task/invoke", payload)
+
+    def send_event(self, event_name: str, data: Dict[str, Any], correlation_id: Optional[str] = None) -> Dict[str, Any]:
+        message = {"type": "event", "event": event_name, "data": data}
+        if correlation_id:
+            message["correlation_id"] = correlation_id
+        return self._request("POST", "/bridge/event", message)

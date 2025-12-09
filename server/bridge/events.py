@@ -33,3 +33,10 @@ class EventBus:
 
 
 EVENT_BUS = EventBus()
+
+
+def _log_listener(event_name: str, data: Dict[str, Any]) -> None:
+    print(f"[EVENT] {event_name} {data}")
+
+
+EVENT_BUS.subscribe("*", _log_listener)

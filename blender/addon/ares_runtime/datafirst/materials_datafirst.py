@@ -9,6 +9,7 @@ except Exception:  # pragma: no cover
 
 from blender.addon.ares_runtime.helpers import material_utils
 from blender.addon.ares_runtime.helpers.undo_utils import push_undo_step
+from blender.addon.bridge.event_emitter import emit_event
 
 
 def assign_material(obj_name: str, material_name: str, color: List[float]) -> Dict[str, Any]:
@@ -26,4 +27,9 @@ def assign_material(obj_name: str, material_name: str, color: List[float]) -> Di
     material_utils.ensure_material_output(mat)
     material_utils.link_principled_to_output(mat, principled)
     material_utils.assign_material_to_object(obj, mat)
-    return {"ok": True, "data": {"object": obj.name, "material": mat.name, "color": color}}
+    result = {"ok": True, "data": {"object": obj.name, "material": mat.name, "color": color}}
+    try:
+        emit_event("material.updated", {"object": obj.name, "material": mat.name})
+    except Exception:
+        pass
+    return result
