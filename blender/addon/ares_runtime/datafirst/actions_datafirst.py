@@ -1,0 +1,50 @@
+from __future__ import annotations
+
+from typing import Any, Dict
+
+try:
+    import bpy  # type: ignore
+except Exception:  # pragma: no cover
+    bpy = None
+
+
+def create_cube(name: str, size: float) -> Dict[str, Any]:
+    if bpy is None:
+        return {"ok": False, "error": "bpy unavailable"}
+    half = size / 2.0
+    verts = [
+        (-half, -half, -half),
+        (-half, -half, half),
+        (-half, half, -half),
+        (-half, half, half),
+        (half, -half, -half),
+        (half, -half, half),
+        (half, half, -half),
+        (half, half, half),
+    ]
+    faces = [
+        (0, 1, 3, 2),
+        (4, 6, 7, 5),
+        (0, 4, 5, 1),
+        (2, 3, 7, 6),
+        (1, 5, 7, 3),
+        (0, 2, 6, 4),
+    ]
+    mesh = bpy.data.meshes.new(name)
+    mesh.from_pydata(verts, [], faces)
+    mesh.update()
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.scene.collection.objects.link(obj)
+    return {"ok": True, "data": {"name": obj.name, "size": size}}
+
+
+def move_object(name: str, translation: Dict[str, float]) -> Dict[str, Any]:
+    if bpy is None:
+        return {"ok": False, "error": "bpy unavailable"}
+    obj = bpy.data.objects.get(name)
+    if obj is None:
+        return {"ok": False, "error": f"Object '{name}' not found"}
+    obj.location.x += float(translation.get("x", 0))
+    obj.location.y += float(translation.get("y", 0))
+    obj.location.z += float(translation.get("z", 0))
+    return {"ok": True, "data": {"name": obj.name, "location": list(obj.location)}}
