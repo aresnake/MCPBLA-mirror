@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "mcpbla": {
+      "description": "MCP Blender Orchestrator (local HTTP server for this workspace).",
+      "command": "python",
+      "args": [
+        "-m",
+        "mcpbla.server.mcp_server"
+      ],
+      "env": {
+        "MCP_PORT": "8000",
+        "MCP_HOST": "127.0.0.1",
+        "MCP_WORKSPACE": "D:/MCPBLA"
+      },
+      "transport": {
+        "type": "http",
+        "url": "http://127.0.0.1:8000"
+      },
+      "cwd": "D:/MCPBLA",
+      "timeoutSeconds": 10
+    }
+  }
+}
