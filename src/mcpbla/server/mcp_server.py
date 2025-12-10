@@ -80,3 +80,34 @@ def create_app(config: ServerConfig | None = None) -> FastAPI:
 
 app = create_app()
 
+def main() -> None:
+    """Run the MCP Blender Orchestrator HTTP server via uvicorn.
+
+    This is used both for local CLI runs:
+
+        python -m mcpbla.server.mcp_server
+
+    and for MCP clients (Claude Desktop / Claude Code) that start the
+    server by calling this module as a script.
+    """
+    import os
+    import uvicorn
+
+    # Same env vars que ce qu’on utilise déjà dans la doc / scripts
+    host = os.getenv("MCP_HOST", "127.0.0.1")
+    port_str = os.getenv("MCP_PORT", "8000")
+    try:
+        port = int(port_str)
+    except ValueError:
+        port = 8000
+
+    uvicorn.run(
+        "mcpbla.server.mcp_server:app",
+        host=host,
+        port=port,
+        log_level="info",
+    )
+
+
+if __name__ == "__main__":
+    main()
