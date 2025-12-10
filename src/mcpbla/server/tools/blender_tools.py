@@ -1,0 +1,182 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any, Dict, List
+
+from mcpbla.server.bridge import scenegraph_live, scene_state
+from mcpbla.server.tools.base import Tool
+
+
+def get_scenegraph_snapshot() -> Dict[str, Any]:
+    """Stub returning an empty scenegraph snapshot (legacy helper)."""
+    return {"objects": [], "materials": []}
+
+
+def _echo_text_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    text = arguments.get("text", "")
+    return {"text": text}
+
+
+def _list_workspace_files_handler(workspace_root: Path) -> Dict[str, Any]:
+    entries = []
+    for item in workspace_root.iterdir():
+        entries.append(item.name + ("/" if item.is_dir() else ""))
+    return {"files": sorted(entries)}
+
+
+def _get_last_scene_snapshot_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    session_id = arguments.get("session_id")
+    snapshot = scenegraph_live.get_snapshot(session_id) if session_id else None
+    if snapshot is None:
+        snapshot = scenegraph_live.get_last_snapshot()
+    if snapshot is None:
+        return {"error": f"No snapshot for session_id '{session_id}'"}
+    return scenegraph_live.ScenegraphLive.serialize_snapshot(snapshot)
+
+
+def _get_scenegraph_snapshot_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Return the latest stored scenegraph snapshot."""
+    return _get_last_scene_snapshot_handler(arguments)
+
+
+def _create_cube_handler(_: Dict[str, Any]) -> Dict[str, Any]:
+    scene_state.upsert_object("Cube", type="MESH", location=[0.0, 0.0, 0.0])
+    return {"status": "created", "object": "Cube"}
+
+
+def _create_sphere_handler(_: Dict[str, Any]) -> Dict[str, Any]:
+    scene_state.upsert_object("Sphere", type="MESH", location=[0.0, 0.0, 0.0])
+    return {"status": "created", "object": "Sphere"}
+
+
+def _move_object_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    name = arguments.get("object_name")
+    delta = arguments.get("delta", [0, 0, 0])
+    updated = scene_state.move_object(name, delta)
+    return {"status": "moved", "object": name, "delta": delta, "location": updated["location"]}
+
+
+def _assign_material_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    name = arguments.get("object_name")
+    material = arguments.get("material")
+    scene_state.assign_material(name, material)
+    return {"status": "material_assigned", "object": name, "material": material}
+
+
+def _apply_fx_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    name = arguments.get("object_name")
+    fx = arguments.get("fx")
+    scene_state.apply_fx(name, fx)
+    return {"status": "fx_applied", "object": name, "fx": fx}
+
+
+def _get_scene_state_handler(_: Dict[str, Any]) -> Dict[str, Any]:
+    return scene_state.get_scene_state()
+
+
+def get_tools(workspace_root) -> List[Tool]:
+    """Return the list of MCP-style tools exposed by the server."""
+    return [
+        Tool(
+            name="echo_text",
+            description="Echo a piece of text.",
+            input_schema={
+                "type": "object",
+                "properties": {"text": {"type": "string"}},
+                "required": ["text"],
+            },
+            handler=_async_wrapper(_echo_text_handler),
+        ),
+        Tool(
+            name="list_workspace_files",
+            description="List files in the MCP workspace root (non-recursive or shallow).",
+            input_schema={"type": "object", "properties": {}},
+            handler=_async_wrapper(lambda _=None: _list_workspace_files_handler(workspace_root)),
+        ),
+        Tool(
+            name="get_last_scene_snapshot",
+            description="Retrieve the latest scene snapshot for a session.",
+            input_schema={
+                "type": "object",
+                "properties": {"session_id": {"type": "string"}},
+                "required": ["session_id"],
+            },
+            handler=_async_wrapper(_get_last_scene_snapshot_handler),
+        ),
+        Tool(
+            name="get_scenegraph_snapshot",
+            description="Return the last stored scene snapshot (scenegraph).",
+            input_schema={
+                "type": "object",
+                "properties": {"session_id": {"type": "string"}},
+            },
+            handler=_async_wrapper(_get_scenegraph_snapshot_handler),
+        ),
+        Tool(
+            name="create_cube_stub",
+            description="Create a cube in the scene (stub).",
+            input_schema={"type": "object", "properties": {}},
+            handler=_async_wrapper(_create_cube_handler),
+        ),
+        Tool(
+            name="create_sphere_stub",
+            description="Create a sphere in the scene (stub).",
+            input_schema={"type": "object", "properties": {}},
+            handler=_async_wrapper(_create_sphere_handler),
+        ),
+        Tool(
+            name="move_object_stub",
+            description="Move an object by delta (stub).",
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "object_name": {"type": "string"},
+                    "delta": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3},
+                },
+                "required": ["object_name", "delta"],
+            },
+            handler=_async_wrapper(_move_object_handler),
+        ),
+        Tool(
+            name="assign_material_stub",
+            description="Assign a material to an object (stub).",
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "object_name": {"type": "string"},
+                    "material": {"type": "string"},
+                },
+                "required": ["object_name", "material"],
+            },
+            handler=_async_wrapper(_assign_material_handler),
+        ),
+        Tool(
+            name="apply_fx_stub",
+            description="Apply a simple FX to an object (stub).",
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "object_name": {"type": "string"},
+                    "fx": {"type": "string"},
+                },
+                "required": ["object_name", "fx"],
+            },
+            handler=_async_wrapper(_apply_fx_handler),
+        ),
+        Tool(
+            name="get_scene_state",
+            description="Get the current in-memory logical scene state.",
+            input_schema={"type": "object", "properties": {}},
+            handler=_async_wrapper(_get_scene_state_handler),
+        ),
+    ]
+
+
+def _async_wrapper(func):
+    """Wrap sync handlers so they can be awaited uniformly."""
+
+    async def wrapped(arguments: Dict[str, Any]) -> Any:
+        return func(arguments)
+
+    return wrapped
+

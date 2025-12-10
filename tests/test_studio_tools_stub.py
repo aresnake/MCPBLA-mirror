@@ -1,4 +1,4 @@
-from server.tools import studio_tools
+from mcpbla.server.tools import studio_tools
 
 
 def test_studio_tool_stub():
@@ -9,3 +9,4 @@ def test_studio_tool_stub():
 
     result = asyncio.run(handler({}))
     assert "ok" in result
+

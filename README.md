@@ -61,8 +61,8 @@ This verifies the bridge HTTP path without launching Blender.
 
 ### Demo: connect and send a snapshot (no Blender required)
 ```bash
-python blender/scripts/demo_connect.py
-python blender/scripts/demo_scene_snapshot.py
+python -m mcpbla.blender.scripts.demo_connect
+python -m mcpbla.blender.scripts.demo_scene_snapshot
 ```
 Set `MCP_SERVER_URL` if your server is running elsewhere (default `http://127.0.0.1:8000`).
 
@@ -102,7 +102,7 @@ Example HTTP payloads (FastAPI endpoints):
 ```bash
 python -m scripts.start_mcp_server  # terminal 1
 # in another terminal:
-python -m blender.scripts.demo_run_task
+python -m mcpbla.blender.scripts.demo_run_task
 ```
 The Blender addon (N-panel, MCP category) also has a "Run Demo Task" button that triggers the same orchestrator flow.
 

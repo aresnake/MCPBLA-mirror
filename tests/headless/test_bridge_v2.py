@@ -1,5 +1,5 @@
-from server.bridge.pool_v2 import BridgePoolV2
-from server.bridge.messages import ActionMessage
+from mcpbla.server.bridge.pool_v2 import BridgePoolV2
+from mcpbla.server.bridge.messages import ActionMessage
 
 
 def test_bridge_pool_v2_without_handler():
@@ -11,3 +11,4 @@ def test_bridge_pool_v2_without_handler():
         assert True
     else:
         assert False
+

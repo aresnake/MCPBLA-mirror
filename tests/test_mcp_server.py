@@ -1,8 +1,8 @@
 from fastapi.testclient import TestClient
 
-from server.bridge.scenegraph_live import clear_registry
-from server.bridge import scene_state
-from server.mcp_server import create_app
+from mcpbla.server.bridge.scenegraph_live import clear_registry
+from mcpbla.server.bridge import scene_state
+from mcpbla.server.mcp_server import create_app
 
 
 def test_healthcheck():
@@ -68,3 +68,4 @@ def test_get_scene_state_tool_http():
     state = resp.json().get("result", {})
     assert "objects" in state
     assert "Cube" in state.get("objects", {})
+

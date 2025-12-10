@@ -1,8 +1,8 @@
 import pytest
 
-from server.bridge import scene_state
-from server.tools.registry import build_tool_registry, invoke_tool
-from server.utils.config import load_config
+from mcpbla.server.bridge import scene_state
+from mcpbla.server.tools.registry import build_tool_registry, invoke_tool
+from mcpbla.server.utils.config import load_config
 
 
 @pytest.fixture(autouse=True)
@@ -28,3 +28,4 @@ def test_stub_tools_update_state():
     state = scene_state.get_scene_state()
     assert "Cube" in state["objects"]
     assert state["objects"]["Cube"]["location"] == [0.0, 1.0, 0.0]
+

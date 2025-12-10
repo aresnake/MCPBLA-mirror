@@ -1,8 +1,8 @@
-from server.agents.modeler_agent_v3 import ModelerAgentV3, MAX_ITER
-from server.bridge.scenegraph import SCENEGRAPH
-from server.core.engines.action_engine_v3 import ActionEngineV3
-from server.core.contracts.common_types import ContractResult
-from server.orchestrator.plan_v3 import TaskAction, TaskPlan
+from mcpbla.server.agents.modeler_agent_v3 import ModelerAgentV3, MAX_ITER
+from mcpbla.server.bridge.scenegraph import SCENEGRAPH
+from mcpbla.server.core.engines.action_engine_v3 import ActionEngineV3
+from mcpbla.server.core.contracts.common_types import ContractResult
+from mcpbla.server.orchestrator.plan_v3 import TaskAction, TaskPlan
 
 
 class DummyEngine(ActionEngineV3):
@@ -30,3 +30,4 @@ def test_modeler_agent_v3_replan():
     res = agent.run("create cube")
     assert res["ok"] is False
     assert res["message"] == "Max iterations reached"
+

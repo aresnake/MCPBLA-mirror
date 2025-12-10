@@ -4,7 +4,7 @@ import json
 import os
 import sys
 
-from blender.addon.bridge_client import BridgeClient
+from mcpbla.blender.addon.bridge_client import BridgeClient
 
 
 def main() -> int:
@@ -23,3 +23,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

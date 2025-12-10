@@ -1,4 +1,4 @@
-from server.agents import fx_agent, modeler_agent, shading_agent
+from mcpbla.server.agents import fx_agent, modeler_agent, shading_agent
 
 
 def test_modeler_agent_plans_cube():
@@ -17,3 +17,4 @@ def test_fx_agent_plans_fx():
     steps = fx_agent.plan_fx("add glow fx")
     assert steps
     assert any(step.tool_name == "apply_fx_stub" for step in steps)
+

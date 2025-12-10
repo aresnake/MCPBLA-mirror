@@ -34,7 +34,11 @@ dev = [
 [tool.pytest.ini_options]
 addopts = "-q"
 testpaths = ["tests"]
+pythonpath = ["src"]
 
 [tool.hatch.metadata]
 allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcpbla"]
 

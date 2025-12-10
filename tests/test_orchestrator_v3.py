@@ -1,8 +1,8 @@
-from server.bridge.scenegraph import SCENEGRAPH
-from server.orchestrator.orchestrator_v3 import OrchestratorV3
-from server.orchestrator.plan_v3 import TaskPlan, TaskAction
-from server.core.engines.action_engine_v3 import ActionEngineV3
-from server.core.contracts.common_types import ContractResult
+from mcpbla.server.bridge.scenegraph import SCENEGRAPH
+from mcpbla.server.orchestrator.orchestrator_v3 import OrchestratorV3
+from mcpbla.server.orchestrator.plan_v3 import TaskPlan, TaskAction
+from mcpbla.server.core.engines.action_engine_v3 import ActionEngineV3
+from mcpbla.server.core.contracts.common_types import ContractResult
 
 
 class DummyEngine(ActionEngineV3):
@@ -39,3 +39,4 @@ def test_replan_after_failure():
     new_plan = orch.replan(plan, verify)
     assert isinstance(new_plan, TaskPlan)
     assert new_plan.actions
+

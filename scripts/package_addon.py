@@ -10,7 +10,7 @@ ADDON_NAME = "mcp_blender_addon"
 
 def package_addon() -> Path:
     repo_root = Path(__file__).resolve().parent.parent
-    addon_src = repo_root / "blender" / "addon"
+    addon_src = repo_root / "src" / "mcpbla" / "blender" / "addon"
     if not addon_src.exists():
         raise FileNotFoundError(f"Addon source not found at {addon_src}")
 

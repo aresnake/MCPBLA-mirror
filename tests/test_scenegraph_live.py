@@ -1,7 +1,7 @@
 import pytest
 
-from server.bridge.scenegraph_live import SceneSnapshot, ScenegraphLive, clear_registry, get_snapshot, store_snapshot
-from server.tools.blender_tools import _get_scenegraph_snapshot_handler
+from mcpbla.server.bridge.scenegraph_live import SceneSnapshot, ScenegraphLive, clear_registry, get_snapshot, store_snapshot
+from mcpbla.server.tools.blender_tools import _get_scenegraph_snapshot_handler
 
 
 @pytest.fixture(autouse=True)
@@ -33,3 +33,4 @@ def test_get_scenegraph_snapshot_tool_handler():
     result = _get_scenegraph_snapshot_handler({"session_id": "demo2"})
     assert result["session_id"] == "demo2"
     assert result["objects"][0]["name"] == "Cube"
+

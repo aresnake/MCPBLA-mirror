@@ -1,4 +1,4 @@
-from server.bridge.router_v2 import RouterV2
+from mcpbla.server.bridge.router_v2 import RouterV2
 
 
 def test_router_receive_event():
@@ -13,3 +13,4 @@ def test_router_receive_event():
     router.receive({"type": "event", "event": "demo", "data": {"ok": True}})
     assert captured.get("event") == "demo"
     assert captured.get("data") == {"ok": True}
+

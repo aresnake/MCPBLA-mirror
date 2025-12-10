@@ -1,9 +1,9 @@
 # MCPBLA Architecture
 
 ## High-level layout
-- `server/`: FastAPI MCP-style server exposing tools, orchestrators, and bridge endpoints.
-- `blender/addon/`: Blender add-on and bridge client used to talk to the MCP server.
-- `blender/scripts/`: Small demo scripts that hit the MCP HTTP endpoints.
+- `src/mcpbla/server/`: FastAPI MCP-style server exposing tools, orchestrators, and bridge endpoints.
+- `src/mcpbla/blender/addon/`: Blender add-on and bridge client used to talk to the MCP server.
+- `src/mcpbla/blender/scripts/`: Small demo scripts that hit the MCP HTTP endpoints.
 - `scripts/`: Local utilities (start server, package add-on, run live demos).
 - `tests/`: Pytest suites (unit + headless bridge checks).
 

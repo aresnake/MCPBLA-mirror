@@ -1,5 +1,5 @@
 """Minimal end-to-end stub."""
-from server.mcp_server import create_app
+from mcpbla.server.mcp_server import create_app
 
 
 def main():
@@ -9,3 +9,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

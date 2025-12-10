@@ -1,5 +1,5 @@
-from server.bridge.events import EVENT_BUS
-from server.bridge.router_v2 import RouterV2
+from mcpbla.server.bridge.events import EVENT_BUS
+from mcpbla.server.bridge.router_v2 import RouterV2
 
 
 def test_event_roundtrip():
@@ -15,3 +15,4 @@ def test_event_roundtrip():
     router.receive({"type": "event", "event": "test", "data": {"foo": "bar"}})
     assert received.get("event") == "test"
     assert received.get("data") == {"foo": "bar"}
+
