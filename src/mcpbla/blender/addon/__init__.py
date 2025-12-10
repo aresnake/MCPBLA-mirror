@@ -1,33 +1,35 @@
-from .mcp_blender_addon import (
-    MCP_OT_PingServer,
-    MCP_OT_SendDummySnapshot,
-    MCP_OT_RunDemoTask,
-    MCP_OT_RunDemoTaskInBlender,
-    MCP_PT_Panel,
-)
+# src/mcpbla/blender/addon/__init__.py
 
 bl_info = {
-    "name": "MCP Blender Bridge",
+    "name": "MCP Blender Orchestrator",
     "author": "Adrien / ARES",
     "version": (0, 1, 0),
     "blender": (5, 0, 0),
     "location": "View3D > Sidebar > MCP",
-    "description": "Connects Blender to the MCP orchestrator server (scene snapshot, orchestrator tools, demo tasks).",
+    "description": "Connects Blender to the MCPBLA orchestration server (HTTP bridge + tools).",
     "category": "3D View",
 }
 
 
-def register():  # pragma: no cover - Blender runtime only
-    import bpy  # type: ignore
+def register() -> None:
+    """
+    Entry point for Blender's add-on system.
 
-    for cls in (MCP_OT_PingServer, MCP_OT_SendDummySnapshot, MCP_OT_RunDemoTask, MCP_OT_RunDemoTaskInBlender, MCP_PT_Panel):
-        bpy.utils.register_class(cls)
+    We import the heavy module (operators, panels, bridge wiring)
+    *inside* this function so that simply importing
+    `mcpbla.blender.addon` (e.g. from headless scripts) does NOT
+    require Blender runtime or any UI classes.
+    """
+    from . import mcp_blender_addon
+
+    mcp_blender_addon.register()
 
 
-def unregister():  # pragma: no cover - Blender runtime only
-    import bpy  # type: ignore
+def unregister() -> None:
+    """
+    Mirror of `register()`. Keeps the import local so importing the
+    package stays lightweight outside Blender.
+    """
+    from . import mcp_blender_addon
 
-    for cls in reversed(
-        (MCP_OT_PingServer, MCP_OT_SendDummySnapshot, MCP_OT_RunDemoTask, MCP_OT_RunDemoTaskInBlender, MCP_PT_Panel)
-    ):
-        bpy.utils.unregister_class(cls)
+    mcp_blender_addon.unregister()
