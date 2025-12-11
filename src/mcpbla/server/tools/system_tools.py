@@ -1,74 +1,135 @@
-"""
-System-level diagnostic tools for MCP hosts.
-Provides information about environment, versions, and Blender capabilities.
+"""System-level MCP tools for Blender-Jarvis.
+
+These tools are meant for:
+- probing the Python/platform environment (system_probe_full)
+- probing the Blender API/version when running inside Blender (api_probe_blender_version)
 """
 
 from __future__ import annotations
-from typing import Any, Dict, List
+
+import os
 import platform
 import sys
-import json
-
-try:
-    import bpy  # Blender runtime
-except Exception:
-    bpy = None
-
-
-def _async_wrapper(func):
-    async def wrapped(arguments: Dict[str, Any]) -> Any:
-        return func(arguments)
-    return wrapped
-
-
-def _system_probe_handler(_: Dict[str, Any]) -> Dict[str, Any]:
-    """Return a full diagnostic dump of the MCP server environment."""
-    return {
-        "python_version": sys.version,
-        "platform": platform.platform(),
-        "machine": platform.machine(),
-        "processor": platform.processor(),
-        "implementation": platform.python_implementation(),
-        "executable": sys.executable,
-        "argv": sys.argv,
-        "env_ok": True,
-    }
-
-
-def _blender_version_handler(_: Dict[str, Any]) -> Dict[str, Any]:
-    """Return Blender version if running inside Blender, else unavailable."""
-    if bpy is None:
-        return {
-            "blender": None,
-            "ok": False,
-            "error": "bpy not available (server running outside Blender)"
-        }
-
-    version = bpy.app.version  # (major, minor, patch)
-    return {
-        "blender": {
-            "major": version[0],
-            "minor": version[1],
-            "patch": version[2],
-        },
-        "ok": True,
-    }
-
+from typing import Any, Dict, List
 
 from .base import Tool
 
 
+def _async_wrapper(func):
+    """Wrap sync handlers for async MCP tool compatibility."""
+    async def wrapped(arguments: Dict[str, Any]) -> Any:
+        return func(arguments)
+
+    return wrapped
+
+
+def _system_probe_full_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Health-check of the MCP Blender-Jarvis environment."""
+    include_env = bool(arguments.get("include_env", False))
+    env_keys = arguments.get("env_keys") or []
+
+    info: Dict[str, Any] = {
+        "ok": True,
+        "python": {
+            "version": sys.version,
+            "executable": sys.executable,
+        },
+        "platform": {
+            "system": platform.system(),
+            "release": platform.release(),
+            "machine": platform.machine(),
+            "version": platform.version(),
+        },
+        "paths": {
+            "cwd": os.getcwd(),
+            "pythonpath": sys.path,
+        },
+    }
+
+    if include_env:
+        env_snapshot: Dict[str, str] = {}
+        if env_keys:
+            for key in env_keys:
+                if key in os.environ:
+                    env_snapshot[key] = os.environ[key]
+        else:
+            # Par défaut, on prend un tout petit subset safe
+            for key in ("BLENDER_EXE", "BLENDER_USER_SCRIPTS", "PATH", "PYTHONPATH"):
+                if key in os.environ:
+                    env_snapshot[key] = os.environ[key]
+        info["env"] = env_snapshot
+
+    return info
+
+
+def _api_probe_blender_version_handler(_: Dict[str, Any]) -> Dict[str, Any]:
+    """Return Blender version/build info if running inside Blender."""
+    try:
+        import bpy  # type: ignore
+    except ImportError:
+        return {
+            "ok": False,
+            "blender": None,
+            "error": "bpy not available (server not running inside Blender)",
+        }
+
+    version = getattr(bpy.app, "version", None)
+    build_hash = getattr(bpy.app, "build_hash", None)
+    build_date = getattr(bpy.app, "build_date", None)
+
+    if version is None:
+        return {
+            "ok": False,
+            "blender": None,
+            "error": "bpy.app.version not available",
+        }
+
+    major, minor, patch = version
+
+    return {
+        "ok": True,
+        "blender": {
+            "major": major,
+            "minor": minor,
+            "patch": patch,
+            "build_hash": build_hash,
+            "build_date": build_date,
+        },
+    }
+
+
 def get_tools() -> List[Tool]:
-    """Expose system-diagnostic tools."""
+    """Expose system-level tools as MCP tools."""
     return [
         Tool(
             name="system_probe_full",
-            description="Return full diagnostic information about Python and host environment.",
-            handler=_async_wrapper(_system_probe_handler),
+            description="Health-check of the MCP Blender-Jarvis environment (Python, platform, paths, env subset).",
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "include_env": {
+                        "type": "boolean",
+                        "description": "Include selected environment variables snapshot.",
+                        "default": False,
+                    },
+                    "env_keys": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Specific environment variable names to include.",
+                    },
+                },
+                "required": [],
+            },
+            handler=_async_wrapper(_system_probe_full_handler),
         ),
         Tool(
             name="api_probe_blender_version",
-            description="Return Blender version (if server is running inside Blender).",
-            handler=_async_wrapper(_blender_version_handler),
+            description="Return Blender version/build information if running inside Blender.",
+            input_schema={
+                "type": "object",
+                "properties": {},
+                "required": [],
+            },
+            handler=_async_wrapper(_api_probe_blender_version_handler),
         ),
     ]
