@@ -1,3 +1,5 @@
+"""Tools exposing read-only access to the live scenegraph representation."""
+
 from __future__ import annotations
 
 from typing import Any, Dict, List
@@ -7,6 +9,7 @@ from mcpbla.server.tools.base import Tool
 
 
 def _async_wrapper(func):
+    """Wrap sync scenegraph helpers for async compatibility."""
     async def wrapped(arguments):
         return func(arguments)
 
@@ -14,20 +17,24 @@ def _async_wrapper(func):
 
 
 def _describe_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Return a serialized description of the live scenegraph."""
     return SCENEGRAPH.describe()
 
 
 def _search_handler(arguments: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Search the scenegraph using a simple query string."""
     query = arguments.get("query", "")
     return SCENEGRAPH.find(query)
 
 
 def _get_handler(arguments: Dict[str, Any]) -> Dict[str, Any] | None:
+    """Fetch a scenegraph entry by key."""
     key = arguments.get("key", "")
     return SCENEGRAPH.get(key)
 
 
 def get_tools() -> List[Tool]:
+    """Expose read-only scenegraph helpers as MCP tools."""
     return [
         Tool(
             name="scenegraph_describe",
@@ -56,4 +63,3 @@ def get_tools() -> List[Tool]:
             handler=_async_wrapper(_get_handler),
         ),
     ]
-

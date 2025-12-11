@@ -1,3 +1,5 @@
+"""Studio-centric diagnostic tools for MCP hosts."""
+
 from __future__ import annotations
 
 import subprocess
@@ -9,6 +11,7 @@ from mcpbla.server.tools.base import Tool
 
 
 def _async_wrapper(func):
+    """Wrap sync studio helpers for async compatibility."""
     async def wrapped(arguments: Dict[str, Any]) -> Any:
         return func(arguments)
 
@@ -16,6 +19,7 @@ def _async_wrapper(func):
 
 
 def _run_e2e(_: Dict[str, Any]) -> Dict[str, Any]:
+    """Trigger the end-to-end studio smoke test script."""
     root = Path(__file__).resolve().parent.parent
     script = root / "scripts" / "e2e_studio_test.py"
     if not script.exists():
@@ -37,4 +41,3 @@ def get_tools() -> List[Tool]:
             handler=_async_wrapper(_run_e2e),
         )
     ]
-

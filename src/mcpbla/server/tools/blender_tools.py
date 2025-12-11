@@ -1,3 +1,5 @@
+"""Core Blender-adjacent stub tools exposed to MCP hosts."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -13,11 +15,13 @@ def get_scenegraph_snapshot() -> Dict[str, Any]:
 
 
 def _echo_text_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Echo the provided text payload."""
     text = arguments.get("text", "")
     return {"text": text}
 
 
 def _list_workspace_files_handler(workspace_root: Path) -> Dict[str, Any]:
+    """Return a shallow listing of the workspace root."""
     entries = []
     for item in workspace_root.iterdir():
         entries.append(item.name + ("/" if item.is_dir() else ""))
@@ -25,6 +29,7 @@ def _list_workspace_files_handler(workspace_root: Path) -> Dict[str, Any]:
 
 
 def _get_last_scene_snapshot_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Fetch the last live scene snapshot for a session if available."""
     session_id = arguments.get("session_id")
     snapshot = scenegraph_live.get_snapshot(session_id) if session_id else None
     if snapshot is None:
@@ -40,16 +45,19 @@ def _get_scenegraph_snapshot_handler(arguments: Dict[str, Any]) -> Dict[str, Any
 
 
 def _create_cube_handler(_: Dict[str, Any]) -> Dict[str, Any]:
+    """Insert a cube placeholder into the in-memory scene state."""
     scene_state.upsert_object("Cube", type="MESH", location=[0.0, 0.0, 0.0])
     return {"status": "created", "object": "Cube"}
 
 
 def _create_sphere_handler(_: Dict[str, Any]) -> Dict[str, Any]:
+    """Insert a sphere placeholder into the in-memory scene state."""
     scene_state.upsert_object("Sphere", type="MESH", location=[0.0, 0.0, 0.0])
     return {"status": "created", "object": "Sphere"}
 
 
 def _move_object_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Move an object by delta in the in-memory scene state."""
     name = arguments.get("object_name")
     delta = arguments.get("delta", [0, 0, 0])
     updated = scene_state.move_object(name, delta)
@@ -57,6 +65,7 @@ def _move_object_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _assign_material_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Assign a material marker to an object in the in-memory state."""
     name = arguments.get("object_name")
     material = arguments.get("material")
     scene_state.assign_material(name, material)
@@ -64,6 +73,7 @@ def _assign_material_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _apply_fx_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Apply a simple FX marker to an object in the in-memory state."""
     name = arguments.get("object_name")
     fx = arguments.get("fx")
     scene_state.apply_fx(name, fx)
@@ -71,11 +81,12 @@ def _apply_fx_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _get_scene_state_handler(_: Dict[str, Any]) -> Dict[str, Any]:
+    """Return the current logical scene state."""
     return scene_state.get_scene_state()
 
 
 def get_tools(workspace_root) -> List[Tool]:
-    """Return the list of MCP-style tools exposed by the server."""
+    """Return the list of Blender-facing MCP tools and stubs."""
     return [
         Tool(
             name="echo_text",
@@ -179,4 +190,3 @@ def _async_wrapper(func):
         return func(arguments)
 
     return wrapped
-

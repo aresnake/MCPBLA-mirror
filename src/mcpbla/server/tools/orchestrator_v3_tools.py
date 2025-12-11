@@ -1,3 +1,5 @@
+"""Task planning/execution tools for the v3 orchestrator pipeline."""
+
 from __future__ import annotations
 
 from typing import Any, Dict, List
@@ -8,6 +10,7 @@ from mcpbla.server.tools.base import Tool
 
 
 def _async_wrapper(func):
+    """Wrap sync handlers for async MCP execution."""
     async def wrapped(arguments: Dict[str, Any]) -> Any:
         return func(arguments)
 
@@ -15,6 +18,7 @@ def _async_wrapper(func):
 
 
 def _plan_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Create a TaskPlan v3 from an instruction."""
     instruction = arguments.get("instruction", "")
     orchestrator = OrchestratorV3()
     plan = orchestrator.plan(instruction)
@@ -22,6 +26,7 @@ def _plan_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _execute_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Execute a TaskPlan v3 and verify results."""
     plan_dict = arguments.get("plan", {})
     plan = TaskPlan.from_dict(plan_dict)
     orchestrator = OrchestratorV3()
@@ -31,6 +36,7 @@ def _execute_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _refine_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Refine an existing TaskPlan v3 using a diff payload."""
     plan_dict = arguments.get("plan", {})
     diff = arguments.get("diff", {})
     plan = TaskPlan.from_dict(plan_dict)
@@ -40,6 +46,7 @@ def _refine_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def get_tools() -> List[Tool]:
+    """Expose v3 orchestrator operations as MCP tools."""
     return [
         Tool(
             name="plan_v3",
@@ -72,4 +79,3 @@ def get_tools() -> List[Tool]:
             handler=_async_wrapper(_refine_handler),
         ),
     ]
-

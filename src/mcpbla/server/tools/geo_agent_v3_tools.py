@@ -1,3 +1,5 @@
+"""Geometry nodes agent v3 MCP tool wrappers."""
+
 from __future__ import annotations
 
 from typing import Any, Dict, List
@@ -9,6 +11,7 @@ from mcpbla.server.tools.base import Tool
 
 
 def _async_wrapper(func):
+    """Wrap sync geometry operations for async tool calls."""
     async def wrapped(arguments: Dict[str, Any]) -> Any:
         return func(arguments)
 
@@ -16,6 +19,7 @@ def _async_wrapper(func):
 
 
 def _plan_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Create a geometry nodes plan for the requested object/instruction."""
     instruction = arguments.get("instruction", "")
     obj = arguments.get("object", "GeoObj")
     orch = GeometryOrchestratorV3()
@@ -24,6 +28,7 @@ def _plan_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _execute_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Execute a geometry plan and verify it."""
     plan_dict = arguments.get("plan", {})
     plan = GeometryPlanV3.from_dict(plan_dict)
     orch = GeometryOrchestratorV3()
@@ -33,6 +38,7 @@ def _execute_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _agent_run_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Run the autonomous geometry agent end-to-end."""
     instruction = arguments.get("instruction", "")
     obj = arguments.get("object", "GeoObj")
     agent = GeoAgentV3()
@@ -40,6 +46,7 @@ def _agent_run_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def get_tools() -> List[Tool]:
+    """Expose geometry planning/execution and agent run as MCP tools."""
     return [
         Tool(
             name="geo_plan_v3",
@@ -72,4 +79,3 @@ def get_tools() -> List[Tool]:
             handler=_async_wrapper(_agent_run_handler),
         ),
     ]
-

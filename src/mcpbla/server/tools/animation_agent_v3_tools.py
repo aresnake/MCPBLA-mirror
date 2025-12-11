@@ -1,3 +1,5 @@
+"""Animation agent v3 MCP tool wrappers for planning and execution."""
+
 from __future__ import annotations
 
 from typing import Any, Dict, List
@@ -9,6 +11,7 @@ from mcpbla.server.tools.base import Tool
 
 
 def _async_wrapper(func):
+    """Wrap sync animation operations for async compatibility."""
     async def wrapped(arguments: Dict[str, Any]) -> Any:
         return func(arguments)
 
@@ -16,6 +19,7 @@ def _async_wrapper(func):
 
 
 def _plan_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Create an animation plan from instruction/object inputs."""
     instruction = arguments.get("instruction", "")
     obj = arguments.get("object", "AnimObj")
     orch = AnimationOrchestratorV3()
@@ -24,6 +28,7 @@ def _plan_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _execute_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Execute an animation plan and verify it."""
     plan_dict = arguments.get("plan", {})
     plan = AnimationPlanV3.from_dict(plan_dict)
     orch = AnimationOrchestratorV3()
@@ -33,6 +38,7 @@ def _execute_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _agent_run_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Run the autonomous animation agent end-to-end."""
     instruction = arguments.get("instruction", "")
     obj = arguments.get("object", "AnimObj")
     agent = AnimationAgentV3()
@@ -40,6 +46,7 @@ def _agent_run_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def get_tools() -> List[Tool]:
+    """Expose animation planning/execution and agent run as MCP tools."""
     return [
         Tool(
             name="animation_plan_v3",
@@ -72,4 +79,3 @@ def get_tools() -> List[Tool]:
             handler=_async_wrapper(_agent_run_handler),
         ),
     ]
-

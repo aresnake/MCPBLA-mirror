@@ -1,3 +1,5 @@
+"""Action engine-backed MCP tools for direct modeling operations."""
+
 from __future__ import annotations
 
 from typing import Any, Dict, List
@@ -7,6 +9,7 @@ from mcpbla.server.tools.base import Tool
 
 
 def _async_wrapper(func):
+    """Wrap sync handlers for async MCP tool compatibility."""
     async def wrapped(arguments: Dict[str, Any]) -> Any:
         return func(arguments)
 
@@ -14,10 +17,12 @@ def _async_wrapper(func):
 
 
 def _create_engine() -> ActionEngine:
+    """Instantiate a fresh ActionEngine per call."""
     return ActionEngine()
 
 
 def _create_cube_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Create a cube through the action engine."""
     engine = _create_engine()
     name = arguments.get("name")
     size = float(arguments.get("size", 1.0))
@@ -26,6 +31,7 @@ def _create_cube_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _move_object_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Move an object using the action engine translation op."""
     engine = _create_engine()
     name = arguments.get("name")
     translation = arguments.get("translation", {})
@@ -34,6 +40,7 @@ def _move_object_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _assign_material_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Assign a material with color to a given object."""
     engine = _create_engine()
     obj = arguments.get("object")
     material = arguments.get("material")
@@ -43,6 +50,7 @@ def _assign_material_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _apply_modifier_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """Apply a modifier with provided settings to an object."""
     engine = _create_engine()
     obj = arguments.get("object")
     mod_type = arguments.get("type")
@@ -52,6 +60,7 @@ def _apply_modifier_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def get_tools() -> List[Tool]:
+    """Expose action engine wrappers as MCP tools."""
     return [
         Tool(
             name="create_cube",
@@ -121,4 +130,3 @@ def get_tools() -> List[Tool]:
             handler=_async_wrapper(_apply_modifier_handler),
         ),
     ]
-
