@@ -49,6 +49,7 @@ def _collect_tools(workspace_root: Path) -> List[Tool]:
     from .animation_agent_v3_tools import get_tools as anim_get_tools
     from .studio_tools import get_tools as studio_get_tools
     from .system_tools import get_tools as system_get_tools
+    from .bridge_tools import get_tools as bridge_get_tools
 
     tools: List[Tool] = []
 
@@ -78,6 +79,9 @@ def _collect_tools(workspace_root: Path) -> List[Tool]:
 
     # Nouveaux outils système (probes, version, etc.)
     tools.extend(system_get_tools())
+
+    # Bridge health tools
+    tools.extend(bridge_get_tools())
 
     return tools
 

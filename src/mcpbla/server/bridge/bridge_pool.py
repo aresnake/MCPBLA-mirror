@@ -12,6 +12,9 @@ class BridgePool:
     def set_router(self, router: Callable[[str, dict], Any]) -> None:
         self._router = router
 
+    def has_handler(self) -> bool:
+        return self._router is not None
+
     def route(self, route: str, payload: dict) -> Any:
         if not self._router:
             return {

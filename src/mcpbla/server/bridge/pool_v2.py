@@ -15,6 +15,9 @@ class BridgePoolV2:
     def set_handler(self, handler) -> None:
         self.router.handler = handler
 
+    def has_handler(self) -> bool:
+        return self.router.handler is not None
+
     def send_action(self, message: ActionMessage) -> Dict[str, Any]:
         if not self.router.handler:
             return {

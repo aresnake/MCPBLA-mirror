@@ -96,3 +96,39 @@ def test_bridge_event_ingress_triggers_event_bus():
     assert body.get("ok") is True
     assert captured.get("event") == "ingress.test"
     assert captured.get("data") == {"value": 1}
+
+
+def test_bridge_probe_not_configured():
+    client = TestClient(create_app())
+    resp = client.post("/tools/bridge_probe/invoke", json={"arguments": {}})
+    assert resp.status_code == 200
+    result = resp.json().get("result", {})
+    assert result.get("ok") is True
+    data = result.get("data", {})
+    assert data.get("configured") is False
+    assert data.get("reachable") is False
+    assert data.get("last_error", {}).get("code") == "BRIDGE_NOT_CONFIGURED"
+
+
+def test_bridge_probe_unreachable_handler():
+    from mcpbla.server.bridge.pool_v2 import get_bridge_pool_v2
+
+    pool = get_bridge_pool_v2()
+    original = pool.router.handler
+
+    def failing_handler(route, payload):
+        raise ConnectionError("no bridge")
+
+    pool.set_handler(failing_handler)
+    try:
+        client = TestClient(create_app())
+        resp = client.post("/tools/bridge_probe/invoke", json={"arguments": {}})
+        assert resp.status_code == 200
+        result = resp.json().get("result", {})
+        assert result.get("ok") is True
+        data = result.get("data", {})
+        assert data.get("configured") is True
+        assert data.get("reachable") is False
+        assert data.get("last_error", {}).get("code") in {"BRIDGE_UNREACHABLE", "BRIDGE_ERROR"}
+    finally:
+        pool.set_handler(original)
