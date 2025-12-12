@@ -21,8 +21,8 @@ try:
         scene_datafirst,
         render_datafirst,
     )
-    from mcpbla.blender.addon.bridge.events import BlenderEventEmitter
-    from mcpbla.blender.addon.bridge_client import BridgeClient
+    from .events import BlenderEventEmitter
+    from ..bridge_client import BridgeClient
 except Exception:  # pragma: no cover
     actions = None
     actions_datafirst = None
@@ -126,3 +126,4 @@ def handle_route(route: str, payload: Dict[str, Any]) -> Dict[str, Any]:
             results.append(handle_route(route_name, pl))
         return {"ok": all(r.get("ok") for r in results), "data": results}
     return {"ok": False, "error": {"code": "UNKNOWN_ROUTE", "message": f"Unknown route '{route}'"}}
+

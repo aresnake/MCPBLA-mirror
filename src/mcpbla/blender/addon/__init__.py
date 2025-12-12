@@ -1,35 +1,53 @@
-# src/mcpbla/blender/addon/__init__.py
+# SPDX-License-Identifier: MIT
+from __future__ import annotations
+
+import os
+import sys
+from pathlib import Path
 
 bl_info = {
-    "name": "MCP Blender Orchestrator",
-    "author": "Adrien / ARES",
+    "name": "MCPBLA",
+    "author": "aresnake",
     "version": (0, 1, 0),
     "blender": (5, 0, 0),
-    "location": "View3D > Sidebar > MCP",
-    "description": "Connects Blender to the MCPBLA orchestration server (HTTP bridge + tools).",
-    "category": "3D View",
+    "location": "View3D > Sidebar",
+    "description": "MCP Blender Bridge + Tools",
+    "category": "Development",
 }
 
+def _ensure_mcpbla_importable() -> None:
+    # 1) Preferred: env var points at repo root (e.g. D:\MCPBLA)
+    repo = os.environ.get("MCPBLA_REPO", "").strip().strip('"')
+    candidates = []
+    if repo:
+        candidates.append(Path(repo) / "src")
 
-def register() -> None:
-    """
-    Entry point for Blender's add-on system.
+    # 2) Fallbacks (dev-friendly)
+    candidates.extend([
+        Path(r"D:\MCPBLA\src"),
+        Path.home() / "MCPBLA" / "src",
+    ])
 
-    We import the heavy module (operators, panels, bridge wiring)
-    *inside* this function so that simply importing
-    `mcpbla.blender.addon` (e.g. from headless scripts) does NOT
-    require Blender runtime or any UI classes.
-    """
+    for p in candidates:
+        try:
+            p = p.resolve()
+        except Exception:
+            continue
+        if (p / "mcpbla").is_dir():
+            if str(p) not in sys.path:
+                sys.path.insert(0, str(p))
+            return
+
+    # If we reach here, we couldn't locate the package.
+    print("[MCPBLA] ERROR: Could not locate repo src/. Set env MCPBLA_REPO to your repo root (e.g. D:\\MCPBLA).")
+    print("[MCPBLA] sys.path head:", sys.path[:8])
+
+_ensure_mcpbla_importable()
+
+def register():
     from . import mcp_blender_addon
-
     mcp_blender_addon.register()
 
-
-def unregister() -> None:
-    """
-    Mirror of `register()`. Keeps the import local so importing the
-    package stays lightweight outside Blender.
-    """
+def unregister():
     from . import mcp_blender_addon
-
     mcp_blender_addon.unregister()

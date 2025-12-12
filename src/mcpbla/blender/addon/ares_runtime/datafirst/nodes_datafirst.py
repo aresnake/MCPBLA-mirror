@@ -8,7 +8,7 @@ except Exception:  # pragma: no cover
     bpy = None
 
 from mcpbla.blender.addon.ares_runtime.helpers.node_utils import safe_new_node
-from mcpbla.blender.addon.bridge.event_emitter import emit_event
+from .event_emitter import emit_event
 
 
 def add_node(material_name: str, node_type: str) -> Dict[str, Any]:
@@ -27,4 +27,5 @@ def add_node(material_name: str, node_type: str) -> Dict[str, Any]:
     except Exception:
         pass
     return result
+
 

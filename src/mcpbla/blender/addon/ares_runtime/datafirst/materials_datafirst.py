@@ -9,7 +9,7 @@ except Exception:  # pragma: no cover
 
 from mcpbla.blender.addon.ares_runtime.helpers import material_utils
 from mcpbla.blender.addon.ares_runtime.helpers.undo_utils import push_undo_step
-from mcpbla.blender.addon.bridge.event_emitter import emit_event
+from .event_emitter import emit_event
 
 
 def assign_material(obj_name: str, material_name: str, color: List[float]) -> Dict[str, Any]:
@@ -33,4 +33,5 @@ def assign_material(obj_name: str, material_name: str, color: List[float]) -> Di
     except Exception:
         pass
     return result
+
 

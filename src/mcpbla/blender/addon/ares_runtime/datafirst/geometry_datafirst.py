@@ -9,7 +9,7 @@ except Exception:  # pragma: no cover
 
 from mcpbla.blender.addon.ares_runtime.helpers.object_utils import apply_modifier
 from mcpbla.blender.addon.ares_runtime.helpers.undo_utils import push_undo_step
-from mcpbla.blender.addon.bridge.event_emitter import emit_event
+from .event_emitter import emit_event
 
 
 def apply_modifier(obj_name: str, mod_type: str, settings: Dict[str, Any]) -> Dict[str, Any]:
@@ -26,4 +26,5 @@ def apply_modifier(obj_name: str, mod_type: str, settings: Dict[str, Any]) -> Di
     except Exception:
         pass
     return result
+
 

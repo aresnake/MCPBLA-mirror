@@ -8,9 +8,7 @@ try:
 except Exception:  # pragma: no cover
     bpy = None
 
-from mcpbla.blender.addon.bridge_client import BridgeClient
-from mcpbla.blender.addon.mcp_blender_addon import build_scene_snapshot
-
+from ..bridge_client import BridgeClient
 _EVENT_MONITOR_ENABLED = False
 
 
@@ -38,7 +36,7 @@ class ARES_OT_snapshot(bpy.types.Operator):  # type: ignore[misc]
     def execute(self, context):  # noqa: ANN001
         client = BridgeClient()
         try:
-            payload = build_scene_snapshot(session_id="diagnostics")
+            payload = (__import__('mcpbla.mcp_blender_addon', fromlist=['build_scene_snapshot']).build_scene_snapshot)(session_id="diagnostics")
             resp = client.send_snapshot(payload)
             self.report({"INFO"}, f"Snapshot sent: {resp}")
         except Exception as exc:  # noqa: BLE001
@@ -112,4 +110,8 @@ def unregister():
         return
     for cls in reversed(CLASSES):
         bpy.utils.unregister_class(cls)
+
+
+
+
 

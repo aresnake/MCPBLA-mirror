@@ -9,7 +9,7 @@ except Exception:  # pragma: no cover
 
 from mcpbla.blender.addon.ares_runtime.helpers.object_utils import ensure_mesh_object, set_object_location
 from mcpbla.blender.addon.ares_runtime.helpers.undo_utils import push_undo_step
-from mcpbla.blender.addon.bridge.event_emitter import emit_event
+from .event_emitter import emit_event
 
 
 def create_cube(name: str, size: float) -> Dict[str, Any]:
@@ -62,4 +62,5 @@ def move_object(name: str, translation: Dict[str, float]) -> Dict[str, Any]:
     except Exception:
         pass
     return result
+
 

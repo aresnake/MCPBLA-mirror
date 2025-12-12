@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from typing import Any, Dict
 
-from mcpbla.blender.addon.bridge_client import BridgeClient
+from ..bridge_client import BridgeClient
 
 
 def emit_event(event_name: str, data: Dict[str, Any]) -> None:
@@ -19,4 +19,5 @@ def emit_event(event_name: str, data: Dict[str, Any]) -> None:
         client.send_event(event_name, data, correlation_id=message["correlation_id"])
     except Exception:
         return
+
 
