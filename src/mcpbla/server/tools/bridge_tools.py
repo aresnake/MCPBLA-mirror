@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 from mcpbla.server.bridge.messages import ActionMessage
+from mcpbla.server.bridge import lifecycle
 from mcpbla.server.bridge.pool_v2 import get_bridge_pool_v2
 from mcpbla.server.tools.base import Tool
 
@@ -21,26 +22,32 @@ def _bridge_probe_handler(_: Dict[str, Any]) -> Dict[str, Any]:
     configured = pool.has_handler()
     reachable = False
     last_error: Optional[Dict[str, Any]] = None
+    lifecycle.set_configured(configured)
 
     if not configured:
         last_error = {"code": "BRIDGE_NOT_CONFIGURED", "message": "Bridge handler not configured"}
+        lifecycle.record_error(last_error["code"], last_error["message"])
     else:
         resp = pool.send_action(ActionMessage(route="system.ping", payload={}))
         if isinstance(resp, dict) and resp.get("ok"):
             reachable = True
+            lifecycle.record_success()
         else:
             err = resp.get("error") if isinstance(resp, dict) else None
             if isinstance(err, dict):
                 last_error = {"code": err.get("code"), "message": err.get("message")}
             else:
                 last_error = {"code": "BRIDGE_UNREACHABLE", "message": "Bridge unreachable"}
+            lifecycle.record_error(last_error["code"], last_error["message"])
 
+    state = lifecycle.get_state()
     return {
         "ok": True,
         "data": {
-            "configured": configured,
-            "reachable": reachable,
-            "last_error": last_error,
+            "configured": state.get("configured", configured),
+            "reachable": state.get("reachable", reachable),
+            "last_seen": state.get("last_seen"),
+            "last_error": state.get("last_error") if state.get("last_error") else last_error,
         },
     }
 
