@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Dict, Optional
 
 
 class BridgePool:
@@ -14,8 +14,16 @@ class BridgePool:
 
     def route(self, route: str, payload: dict) -> Any:
         if not self._router:
-            raise RuntimeError("BridgePool router is not configured")
-        return self._router(route, payload)
+            return {
+                "ok": False,
+                "error": {"code": "BRIDGE_NOT_CONFIGURED", "message": "Bridge handler not configured"},
+            }
+        try:
+            return self._router(route, payload)
+        except (TimeoutError, OSError, ConnectionError) as exc:
+            return {"ok": False, "error": {"code": "BRIDGE_UNREACHABLE", "message": str(exc)}}
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "error": {"code": "BRIDGE_ERROR", "message": str(exc)}}
 
 
 _DEFAULT_POOL: Optional[BridgePool] = None

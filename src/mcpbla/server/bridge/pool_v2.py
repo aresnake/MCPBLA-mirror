@@ -16,11 +16,31 @@ class BridgePoolV2:
         self.router.handler = handler
 
     def send_action(self, message: ActionMessage) -> Dict[str, Any]:
-        return self.router.route(message.route, message.to_dict())
+        if not self.router.handler:
+            return {
+                "ok": False,
+                "error": {"code": "BRIDGE_NOT_CONFIGURED", "message": "Bridge handler not configured"},
+            }
+        try:
+            return self.router.route(message.route, message.to_dict())
+        except (TimeoutError, OSError, ConnectionError) as exc:
+            return {"ok": False, "error": {"code": "BRIDGE_UNREACHABLE", "message": str(exc)}}
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "error": {"code": "BRIDGE_ERROR", "message": str(exc)}}
 
     def send_batch(self, batch: ActionBatch) -> Dict[str, Any]:
         payload = batch.to_dict()
-        return self.router.route("batch.execute", payload)
+        if not self.router.handler:
+            return {
+                "ok": False,
+                "error": {"code": "BRIDGE_NOT_CONFIGURED", "message": "Bridge handler not configured"},
+            }
+        try:
+            return self.router.route("batch.execute", payload)
+        except (TimeoutError, OSError, ConnectionError) as exc:
+            return {"ok": False, "error": {"code": "BRIDGE_UNREACHABLE", "message": str(exc)}}
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "error": {"code": "BRIDGE_ERROR", "message": str(exc)}}
 
     def receive_event(self, payload: dict) -> None:
         self.router.receive(payload)
@@ -34,4 +54,3 @@ def get_bridge_pool_v2() -> BridgePoolV2:
     if _DEFAULT_POOL_V2 is None:
         _DEFAULT_POOL_V2 = BridgePoolV2()
     return _DEFAULT_POOL_V2
-
