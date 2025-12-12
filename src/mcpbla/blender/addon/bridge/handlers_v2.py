@@ -1,6 +1,15 @@
 from __future__ import annotations
 
+import os
+import time
 from typing import Any, Dict
+
+try:
+    import bpy  # type: ignore
+except Exception:  # pragma: no cover
+    bpy = None
+
+_START_TIME = time.time()
 
 try:
     from . import actions
@@ -95,6 +104,19 @@ def handle_route(route: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         if emitter and resp.get("ok"):
             emitter.emit("render.preview.completed", {"scene": resp.get("data", {}).get("scene")})
         return resp
+    if route == "system.ping":
+        version = None
+        if bpy:
+            version = getattr(getattr(bpy, "app", None), "version_string", None) or getattr(getattr(bpy, "app", None), "version", None)
+        uptime = time.time() - _START_TIME
+        return {
+            "ok": True,
+            "data": {
+                "blender_version": version,
+                "pid": os.getpid(),
+                "uptime": uptime,
+            },
+        }
     if route == "batch.execute":
         actions_list = payload.get("actions", [])
         results = []
@@ -104,4 +126,3 @@ def handle_route(route: str, payload: Dict[str, Any]) -> Dict[str, Any]:
             results.append(handle_route(route_name, pl))
         return {"ok": all(r.get("ok") for r in results), "data": results}
     return {"ok": False, "error": f"Unknown route '{route}'"}
-

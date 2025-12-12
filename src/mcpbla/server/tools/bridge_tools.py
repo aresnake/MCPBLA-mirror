@@ -25,7 +25,7 @@ def _bridge_probe_handler(_: Dict[str, Any]) -> Dict[str, Any]:
     if not configured:
         last_error = {"code": "BRIDGE_NOT_CONFIGURED", "message": "Bridge handler not configured"}
     else:
-        resp = pool.send_action(ActionMessage(route="bridge.ping", payload={}))
+        resp = pool.send_action(ActionMessage(route="system.ping", payload={}))
         if isinstance(resp, dict) and resp.get("ok"):
             reachable = True
         else:
