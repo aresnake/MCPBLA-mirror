@@ -71,7 +71,7 @@ Set `MCP_SERVER_URL` if your server is running elsewhere (default `http://127.0.
 python -m pytest
 ```
 
-## Studio Mode — Full Studio Test
+## Studio Mode - Full Studio Test
 - The Blender UI button **"Run Full Studio Test"** invokes the server-side end-to-end script to verify studio tooling.
 - CLI equivalent:
 ```bash
@@ -82,10 +82,12 @@ python -m mcpbla.server.scripts.e2e_studio_test
 - Script location: `src/mcpbla/server/scripts/e2e_studio_test.py`.
 - The script is self-contained: it loads the MCP tool registry and exercises stub actions/snapshots without extra setup.
 
-## Connect MCP hosts (Claude Desktop / Claude Code)
-- Example configs live in `mcp/claude_desktop_config.example.json` and `mcp/claude_code_config.example.json`.
-- Both start the MCP server via `python -m scripts.start_mcp_server` and point hosts to `http://127.0.0.1:8000` (override with `MCP_PORT`/`MCP_HOST`).
-- Copy the relevant example into your host's MCP config location and adjust `MCP_WORKSPACE`/ports if needed.
+## MCP Hosts Setup (Claude Desktop / Claude Code)
+- Copy `mcp/claude_desktop_config.example.json` to `%APPDATA%/Claude/claude_desktop_config.json` (Windows).
+- Copy `mcp/claude_code_config.example.json` to `%APPDATA%/Code/User/globalStorage/anthropic.claude-dev/config.json` (Windows).
+- Start the server: VS Code task **"MCP: Start Server"** or `python -m mcpbla.server.mcp_server` from `D:\MCPBLA` with `MCP_HOST=127.0.0.1`, `MCP_PORT=8000`, `MCP_WORKSPACE=D:\MCPBLA`, `PYTHONPATH=D:\MCPBLA\src`.
+- Open your host (Claude Desktop or Claude Code), verify tools are listed, then run `studio_full_test` (Blender button or CLI) to confirm connectivity.
+- Mirror/public configs are read-only; keep the private copies above as the source of truth.
 
 ## Documentation
 - Architecture: `docs/ARCHITECTURE_MDCPBLA.md`
