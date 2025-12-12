@@ -71,10 +71,21 @@ Set `MCP_SERVER_URL` if your server is running elsewhere (default `http://127.0.
 python -m pytest
 ```
 
+## Studio Mode — Full Studio Test
+- The Blender UI button **"Run Full Studio Test"** invokes the server-side end-to-end script to verify studio tooling.
+- CLI equivalent:
+```bash
+cd D:\MCPBLA
+python -m mcpbla.server.scripts.e2e_studio_test
+```
+- Expected outcome: prints a series of `OK` steps and exits with code 0; the Blender UI shows `ok: true`.
+- Script location: `src/mcpbla/server/scripts/e2e_studio_test.py`.
+- The script is self-contained: it loads the MCP tool registry and exercises stub actions/snapshots without extra setup.
+
 ## Connect MCP hosts (Claude Desktop / Claude Code)
 - Example configs live in `mcp/claude_desktop_config.example.json` and `mcp/claude_code_config.example.json`.
 - Both start the MCP server via `python -m scripts.start_mcp_server` and point hosts to `http://127.0.0.1:8000` (override with `MCP_PORT`/`MCP_HOST`).
-- Copy the relevant example into your host’s MCP config location and adjust `MCP_WORKSPACE`/ports if needed.
+- Copy the relevant example into your host's MCP config location and adjust `MCP_WORKSPACE`/ports if needed.
 
 ## Documentation
 - Architecture: `docs/ARCHITECTURE_MDCPBLA.md`
@@ -127,4 +138,3 @@ Install in Blender: Preferences → Add-ons → Install… → select the genera
 
 ### Project layout
 See the repository tree for server/, blender/, and scripts/ folders. Each area is modular so we can grow toolsets, providers, and agents over time.
-

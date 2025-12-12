@@ -12,6 +12,23 @@
         "panel": "shared"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Studio: Full Test (E2E)",
+      "type": "shell",
+      "command": "python -m mcpbla.server.scripts.e2e_studio_test",
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "shell": {
+          "executable": "pwsh",
+          "args": []
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
     }
   ]
 }
