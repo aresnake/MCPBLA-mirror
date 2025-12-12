@@ -9,7 +9,7 @@ try:
 except Exception:  # pragma: no cover
     bpy = None
 
-_START_TIME = time.time()
+_START_TIME = time.monotonic()
 
 try:
     from . import actions
@@ -108,7 +108,7 @@ def handle_route(route: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         version = None
         if bpy:
             version = getattr(getattr(bpy, "app", None), "version_string", None) or getattr(getattr(bpy, "app", None), "version", None)
-        uptime = time.time() - _START_TIME
+        uptime = time.monotonic() - _START_TIME
         return {
             "ok": True,
             "data": {
@@ -125,4 +125,4 @@ def handle_route(route: str, payload: Dict[str, Any]) -> Dict[str, Any]:
             pl = item.get("payload", {})
             results.append(handle_route(route_name, pl))
         return {"ok": all(r.get("ok") for r in results), "data": results}
-    return {"ok": False, "error": f"Unknown route '{route}'"}
+    return {"ok": False, "error": {"code": "UNKNOWN_ROUTE", "message": f"Unknown route '{route}'"}}
