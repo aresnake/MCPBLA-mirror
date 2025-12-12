@@ -27,6 +27,7 @@ pip install -e .[dev]
 set MCP_PORT=8000
 set MCP_HOST=127.0.0.1
 set MCP_WORKSPACE=D:\MCPBLA
+cd D:\MCPBLA
 python -m mcpbla.server.mcp_server
 # serves FastAPI on http://127.0.0.1:8000 by default
 ```
@@ -41,6 +42,7 @@ pip install -e .[dev]
 set MCP_PORT=8000
 set MCP_HOST=127.0.0.1
 set MCP_WORKSPACE=D:\MCPBLA
+cd D:\MCPBLA
 python -m mcpbla.server.mcp_server
 
 # 3) send a dummy snapshot from another terminal
@@ -113,6 +115,7 @@ Example HTTP payloads (FastAPI endpoints):
 
 ### Running Orchestrator Demos
 ```bash
+cd D:\MCPBLA
 python -m mcpbla.server.mcp_server  # terminal 1
 # in another terminal:
 python -m mcpbla.blender.scripts.demo_run_task
