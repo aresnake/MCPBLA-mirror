@@ -7,6 +7,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from mcpbla.server.bridge import scenegraph_live
+from mcpbla.server.bridge.events import EVENT_BUS
+from mcpbla.server.bridge.scenegraph import SCENEGRAPH
 from mcpbla.server.tools.base import Tool
 from mcpbla.server.tools.registry import build_tool_registry
 from mcpbla.server.utils.config import ServerConfig, load_config
@@ -29,6 +31,16 @@ class SceneSnapshotModel(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
+class BridgeEventModel(BaseModel):
+    event: str
+    data: Dict[str, Any] = Field(default_factory=dict)
+    type: str | None = None
+    correlation_id: str | None = None
+
+
+_SCENEGRAPH_SUBSCRIBED = False
+
+
 def create_app(config: ServerConfig | None = None) -> FastAPI:
     cfg = config or load_config()
     logger = setup_logging(cfg.log_level, __name__)
@@ -36,6 +48,11 @@ def create_app(config: ServerConfig | None = None) -> FastAPI:
     app = FastAPI(title="MCP Blender Orchestrator", version="0.2.0")
 
     tools: Dict[str, Tool] = build_tool_registry(cfg.workspace_root)
+
+    global _SCENEGRAPH_SUBSCRIBED
+    if not _SCENEGRAPH_SUBSCRIBED:
+        EVENT_BUS.subscribe("*", SCENEGRAPH.on_event)
+        _SCENEGRAPH_SUBSCRIBED = True
 
     @app.get("/health")
     async def health() -> Dict[str, str]:
@@ -74,6 +91,11 @@ def create_app(config: ServerConfig | None = None) -> FastAPI:
             "objects_count": len(snapshot.objects),
             "metadata": snapshot.metadata,
         }
+
+    @app.post("/bridge/event")
+    async def ingest_event(event: BridgeEventModel) -> Dict[str, Any]:
+        EVENT_BUS.emit(event.event, event.data)
+        return {"ok": True, "event": event.event, "correlation_id": event.correlation_id}
 
     return app
 

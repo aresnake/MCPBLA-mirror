@@ -28,7 +28,10 @@ class EventBus:
         self._subscribers.setdefault(event_name, []).append(handler)
 
     def emit(self, event_name: str, data: Dict[str, Any]) -> None:
-        for h in self._subscribers.get(event_name, []):
+        handlers: List[Any] = []
+        handlers.extend(self._subscribers.get(event_name, []))
+        handlers.extend(self._subscribers.get("*", []))
+        for h in handlers:
             h(event_name, data)
 
 
@@ -40,4 +43,3 @@ def _log_listener(event_name: str, data: Dict[str, Any]) -> None:
 
 
 EVENT_BUS.subscribe("*", _log_listener)
-

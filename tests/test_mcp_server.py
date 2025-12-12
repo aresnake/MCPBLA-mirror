@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 
 from mcpbla.server.bridge.scenegraph_live import clear_registry
 from mcpbla.server.bridge import scene_state
+from mcpbla.server.bridge.events import EVENT_BUS
 from mcpbla.server.mcp_server import create_app
 
 
@@ -69,3 +70,29 @@ def test_get_scene_state_tool_http():
     assert "objects" in state
     assert "Cube" in state.get("objects", {})
 
+
+def test_action_tool_without_bridge_handler():
+    client = TestClient(create_app())
+    resp = client.post("/tools/create_cube/invoke", json={"arguments": {"size": 1.0, "name": "NoBridge"}})
+    assert resp.status_code == 200
+    result = resp.json().get("result", {})
+    assert result.get("ok") is False
+    error = result.get("error", {})
+    assert error.get("code") == "BRIDGE_NOT_CONFIGURED"
+
+
+def test_bridge_event_ingress_triggers_event_bus():
+    client = TestClient(create_app())
+    captured = {}
+
+    def handler(event_name, data):
+        captured["event"] = event_name
+        captured["data"] = data
+
+    EVENT_BUS.subscribe("ingress.test", handler)
+    resp = client.post("/bridge/event", json={"event": "ingress.test", "data": {"value": 1}})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body.get("ok") is True
+    assert captured.get("event") == "ingress.test"
+    assert captured.get("data") == {"value": 1}

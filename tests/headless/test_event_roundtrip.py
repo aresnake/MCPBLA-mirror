@@ -16,3 +16,15 @@ def test_event_roundtrip():
     assert received.get("event") == "test"
     assert received.get("data") == {"foo": "bar"}
 
+
+def test_event_bus_wildcard():
+    received = {}
+
+    def wildcard(event_name, data):
+        received["event"] = event_name
+        received["data"] = data
+
+    EVENT_BUS.subscribe("*", wildcard)
+    EVENT_BUS.emit("demo.wildcard", {"ok": True})
+    assert received.get("event") == "demo.wildcard"
+    assert received.get("data") == {"ok": True}
