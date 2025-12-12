@@ -1,16 +1,32 @@
 import json
 import os
 import sys
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import httpx
 
 
 HTTP_URL = os.environ.get("MCPBLA_HTTP_URL", "http://127.0.0.1:8000").rstrip("/")
+LOG_PATH = os.environ.get("MCPBLA_GATEWAY_LOG", "")
+
+
+def _log(msg: str) -> None:
+    if not LOG_PATH:
+        return
+    try:
+        os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
+        ts = datetime.utcnow().isoformat() + "Z"
+        with open(LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(f"{ts} {msg}\n")
+    except Exception:
+        pass
 
 
 def _send(obj: Dict[str, Any]) -> None:
-    sys.stdout.write(json.dumps(obj, ensure_ascii=False) + "\n")
+    s = json.dumps(obj, ensure_ascii=False)
+    _log("OUT " + s)
+    sys.stdout.write(s + "\n")
     sys.stdout.flush()
 
 
@@ -40,7 +56,6 @@ def _http_invoke_tool(name: str, arguments: Dict[str, Any]) -> Any:
 
 
 def _normalize_tools(tools_json: Any) -> List[Dict[str, Any]]:
-    # Accept either {"tools":[...]} or [...]
     tools = tools_json.get("tools") if isinstance(tools_json, dict) else tools_json
     if not isinstance(tools, list):
         return []
@@ -49,7 +64,6 @@ def _normalize_tools(tools_json: Any) -> List[Dict[str, Any]]:
     for t in tools:
         if not isinstance(t, dict):
             continue
-        # Your server uses input_schema; Claude MCP expects inputSchema
         schema = t.get("inputSchema")
         if schema is None:
             schema = t.get("input_schema") or {"type": "object", "properties": {}}
@@ -65,16 +79,17 @@ def _normalize_tools(tools_json: Any) -> List[Dict[str, Any]]:
 
 
 def _as_mcp_content(result: Any) -> Dict[str, Any]:
-    # MCP tools/call expects: { content: [ {type: "text", text: "..."} ] }
     return {"content": [{"type": "text", "text": json.dumps(result, ensure_ascii=False)}]}
 
 
 def main() -> None:
-    # JSON-RPC over STDIO gateway → forwards tools to HTTP FastAPI
+    _log(f"START http_url={HTTP_URL} python={sys.executable} cwd={os.getcwd()}")
     for line in sys.stdin:
         line = line.strip()
         if not line:
             continue
+
+        _log("IN  " + line)
 
         try:
             msg = json.loads(line)
@@ -85,8 +100,8 @@ def main() -> None:
         method = msg.get("method", "")
         params = msg.get("params", {}) or {}
 
-        # Notifications (no id): ignore safely (Claude sends "initialized")
         if req_id is None:
+            # notification (e.g., "initialized")
             continue
 
         try:
@@ -95,12 +110,8 @@ def main() -> None:
                     req_id,
                     {
                         "protocolVersion": "2024-11-05",
-                        "serverInfo": {"name": "mcpbla-http-gateway", "version": "0.2.0"},
-                        "capabilities": {
-                            "tools": {},
-                            "resources": {},
-                            "prompts": {},
-                        },
+                        "serverInfo": {"name": "mcpbla-http-gateway", "version": "0.3.0"},
+                        "capabilities": {"tools": {}, "resources": {}, "prompts": {}},
                     },
                 )
                 continue
@@ -113,7 +124,6 @@ def main() -> None:
                 _ok(req_id, {"ok": True})
                 return
 
-            # Provide empty resources/prompts to satisfy clients that probe them
             if method in ("resources/list", "resources.list"):
                 _ok(req_id, {"resources": []})
                 continue
