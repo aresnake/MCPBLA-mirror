@@ -27,10 +27,10 @@ pip install -e .[dev]
 set MCP_PORT=8000
 set MCP_HOST=127.0.0.1
 set MCP_WORKSPACE=D:\MCPBLA
-python scripts/start_mcp_server.py
+python -m mcpbla.server.mcp_server
 # serves FastAPI on http://127.0.0.1:8000 by default
 ```
-Entrypoint: `scripts/start_mcp_server.py` bootstraps `server.mcp_server:create_app()`, which registers all tools via `server.tools.registry`.
+Entrypoint: `mcpbla.server.mcp_server` bootstraps `create_app()`, which registers all tools via `server.tools.registry`.
 
 ### Quick demo (dummy snapshot)
 ```bash
@@ -41,7 +41,7 @@ pip install -e .[dev]
 set MCP_PORT=8000
 set MCP_HOST=127.0.0.1
 set MCP_WORKSPACE=D:\MCPBLA
-python scripts/start_mcp_server.py
+python -m mcpbla.server.mcp_server
 
 # 3) send a dummy snapshot from another terminal
 python scripts/demo_dummy_snapshot.py
@@ -71,7 +71,7 @@ Set `MCP_SERVER_URL` if your server is running elsewhere (default `http://127.0.
 python -m pytest
 ```
 
-## Studio Mode - Full Studio Test
+## Studio Mode — Full Studio Test
 - The Blender UI button **"Run Full Studio Test"** invokes the server-side end-to-end script to verify studio tooling.
 - CLI equivalent:
 ```bash
@@ -113,7 +113,7 @@ Example HTTP payloads (FastAPI endpoints):
 
 ### Running Orchestrator Demos
 ```bash
-python -m scripts.start_mcp_server  # terminal 1
+python -m mcpbla.server.mcp_server  # terminal 1
 # in another terminal:
 python -m mcpbla.blender.scripts.demo_run_task
 ```
@@ -136,7 +136,7 @@ Optional cleanup of old installs:
 python scripts/purge_installed_addon.py --dry-run
 python scripts/purge_installed_addon.py
 ```
-Install in Blender: Preferences → Add-ons → Install… → select the generated zip.
+Install in Blender: Preferences -> Add-ons -> Install -> select the generated zip.
 
 ### Project layout
 See the repository tree for server/, blender/, and scripts/ folders. Each area is modular so we can grow toolsets, providers, and agents over time.
