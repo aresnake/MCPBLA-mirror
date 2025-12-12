@@ -29,6 +29,22 @@
         "panel": "shared"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "MCP: Start Server",
+      "type": "shell",
+      "command": "python -m mcpbla.server.mcp_server",
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "shell": {
+          "executable": "pwsh"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
     }
   ]
 }
