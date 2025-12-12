@@ -1,19 +1,19 @@
 {
   "mcpServers": {
     "mcpbla": {
-      "description": "Start the MCP Blender Orchestrator locally and expose HTTP tools on port 8000.",
-      "command": "python",
-      "args": ["-m", "mcpbla.server.mcp_server"],
-      "cwd": "D:/MCPBLA",
+      "description": "Start MCPBLA locally (FastAPI HTTP tools on 127.0.0.1:8000).",
+      "command": "D:\\MCPBLA\\.venv\\Scripts\\python.exe",
+      "args": [
+        "-m",
+        "mcpbla.server.mcp_server"
+      ],
+      "cwd": "D:\\MCPBLA",
       "env": {
-        "MCP_PORT": "8000",
         "MCP_HOST": "127.0.0.1",
-        "MCP_WORKSPACE": "D:/MCPBLA",
-        "PYTHONPATH": "D:/MCPBLA/src"
-      },
-      "transport": {
-        "type": "http",
-        "url": "http://127.0.0.1:8000"
+        "MCP_PORT": "8000",
+        "MCP_WORKSPACE": "D:\\MCPBLA",
+        "MCPBLA_LOG_LEVEL": "info",
+        "PYTHONUTF8": "1"
       }
     }
   }

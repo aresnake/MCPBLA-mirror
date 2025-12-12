@@ -1,16 +1,7 @@
 {
   "mcpServers": {
     "mcpbla": {
-      "description": "Attach Claude Code to a running MCP Blender Orchestrator over HTTP.",
-      "command": "python",
-      "args": ["-m", "mcpbla.server.mcp_server"],
-      "cwd": "D:/MCPBLA",
-      "env": {
-        "MCP_PORT": "8000",
-        "MCP_HOST": "127.0.0.1",
-        "MCP_WORKSPACE": "D:/MCPBLA",
-        "PYTHONPATH": "D:/MCPBLA/src"
-      },
+      "description": "Connect Claude Code to an already running MCPBLA server over HTTP (do not start a local process).",
       "transport": {
         "type": "http",
         "url": "http://127.0.0.1:8000"
