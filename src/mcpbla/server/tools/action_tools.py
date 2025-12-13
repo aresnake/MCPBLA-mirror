@@ -8,6 +8,7 @@ from mcpbla.server.agents.action_engine import ActionEngine
 from mcpbla.server.tools.base import Tool
 from mcpbla.server.tools.tool_response import (
     BRIDGE_UNREACHABLE,
+    BRIDGE_TIMEOUT,
     INVALID_ARG,
     MISSING_ARG,
     INTERNAL_ERROR,
@@ -29,6 +30,22 @@ def _create_engine() -> ActionEngine:
     return ActionEngine()
 
 
+def _format_error(err_code: str, err_msg: str, error_obj: Any, result_data: Any) -> Dict[str, Any]:
+    details = {"error": error_obj, "data": result_data}
+    if err_code in {BRIDGE_UNREACHABLE, BRIDGE_TIMEOUT}:
+        attempts = None
+        if isinstance(error_obj, dict):
+            attempts = error_obj.get("attempts") or error_obj.get("details", {}).get("attempts")
+        if isinstance(result_data, dict) and attempts is None:
+            details_field = result_data.get("details")
+            if isinstance(details_field, dict):
+                attempts = details_field.get("attempts")
+        if attempts is None:
+            attempts = 1
+        details["attempts"] = attempts
+    return err(err_code, err_msg, details)
+
+
 def _create_cube_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """Create a cube through the action engine."""
     engine = _create_engine()
@@ -42,8 +59,23 @@ def _create_cube_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
         return err(BRIDGE_UNREACHABLE, "Bridge unreachable", {"error": str(exc)})
     if result.ok:
         return ok(result.data)
-    error_msg = result.error if isinstance(result.error, str) else str(result.error)
-    return err(INTERNAL_ERROR, "Action failed", {"error": error_msg, "data": result.data})
+    error_obj = result.error
+    err_code = INTERNAL_ERROR
+    err_msg = "Action failed"
+    if isinstance(error_obj, dict):
+        err_code = error_obj.get("code", err_code)
+        err_msg = error_obj.get("message") or error_obj.get("error") or err_msg
+    elif isinstance(error_obj, str):
+        if error_obj.startswith("BRIDGE_"):
+            err_code = error_obj
+        err_msg = error_obj
+    elif isinstance(result.data, dict):
+        nested_err = result.data.get("error") if isinstance(result.data.get("error"), dict) else {}
+        err_code = nested_err.get("code", err_code)
+        err_msg = nested_err.get("message") or err_msg
+    if err_code == INTERNAL_ERROR and error_obj is not None and not isinstance(error_obj, dict):
+        err_code = BRIDGE_UNREACHABLE
+    return _format_error(err_code, err_msg, error_obj, result.data)
 
 
 def _move_object_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
@@ -64,8 +96,23 @@ def _move_object_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
         return err(BRIDGE_UNREACHABLE, "Bridge unreachable", {"error": str(exc)})
     if result.ok:
         return ok(result.data)
-    error_msg = result.error if isinstance(result.error, str) else str(result.error)
-    return err(INTERNAL_ERROR, "Action failed", {"error": error_msg, "data": result.data})
+    error_obj = result.error
+    err_code = INTERNAL_ERROR
+    err_msg = "Action failed"
+    if isinstance(error_obj, dict):
+        err_code = error_obj.get("code", err_code)
+        err_msg = error_obj.get("message") or error_obj.get("error") or err_msg
+    elif isinstance(error_obj, str):
+        if error_obj.startswith("BRIDGE_"):
+            err_code = error_obj
+        err_msg = error_obj
+    elif isinstance(result.data, dict):
+        nested_err = result.data.get("error") if isinstance(result.data.get("error"), dict) else {}
+        err_code = nested_err.get("code", err_code)
+        err_msg = nested_err.get("message") or err_msg
+    if err_code == INTERNAL_ERROR and error_obj is not None and not isinstance(error_obj, dict):
+        err_code = BRIDGE_UNREACHABLE
+    return _format_error(err_code, err_msg, error_obj, result.data)
 
 
 def _assign_material_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
@@ -86,8 +133,23 @@ def _assign_material_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
         return err(BRIDGE_UNREACHABLE, "Bridge unreachable", {"error": str(exc)})
     if result.ok:
         return ok(result.data)
-    error_msg = result.error if isinstance(result.error, str) else str(result.error)
-    return err(INTERNAL_ERROR, "Action failed", {"error": error_msg, "data": result.data})
+    error_obj = result.error
+    err_code = INTERNAL_ERROR
+    err_msg = "Action failed"
+    if isinstance(error_obj, dict):
+        err_code = error_obj.get("code", err_code)
+        err_msg = error_obj.get("message") or error_obj.get("error") or err_msg
+    elif isinstance(error_obj, str):
+        if error_obj.startswith("BRIDGE_"):
+            err_code = error_obj
+        err_msg = error_obj
+    elif isinstance(result.data, dict):
+        nested_err = result.data.get("error") if isinstance(result.data.get("error"), dict) else {}
+        err_code = nested_err.get("code", err_code)
+        err_msg = nested_err.get("message") or err_msg
+    if err_code == INTERNAL_ERROR and error_obj is not None and not isinstance(error_obj, dict):
+        err_code = BRIDGE_UNREACHABLE
+    return _format_error(err_code, err_msg, error_obj, result.data)
 
 
 def _apply_modifier_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
@@ -108,8 +170,23 @@ def _apply_modifier_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
         return err(BRIDGE_UNREACHABLE, "Bridge unreachable", {"error": str(exc)})
     if result.ok:
         return ok(result.data)
-    error_msg = result.error if isinstance(result.error, str) else str(result.error)
-    return err(INTERNAL_ERROR, "Action failed", {"error": error_msg, "data": result.data})
+    error_obj = result.error
+    err_code = INTERNAL_ERROR
+    err_msg = "Action failed"
+    if isinstance(error_obj, dict):
+        err_code = error_obj.get("code", err_code)
+        err_msg = error_obj.get("message") or error_obj.get("error") or err_msg
+    elif isinstance(error_obj, str):
+        if error_obj.startswith("BRIDGE_"):
+            err_code = error_obj
+        err_msg = error_obj
+    elif isinstance(result.data, dict):
+        nested_err = result.data.get("error") if isinstance(result.data.get("error"), dict) else {}
+        err_code = nested_err.get("code", err_code)
+        err_msg = nested_err.get("message") or err_msg
+    if err_code == INTERNAL_ERROR and error_obj is not None and not isinstance(error_obj, dict):
+        err_code = BRIDGE_UNREACHABLE
+    return _format_error(err_code, err_msg, error_obj, result.data)
 
 
 def get_tools() -> List[Tool]:

@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from mcpbla.server.bridge.env import resolve_bridge_enabled, resolve_bridge_url
-from mcpbla.server.bridge.http_bridge import HttpBridgeHandler
+from mcpbla.server.bridge.http_bridge import HttpBridgeHandler, get_bridge_ping_timeout_seconds
 from mcpbla.server.bridge.messages import ActionMessage
 from mcpbla.server.bridge.events import EVENT_BUS
 from mcpbla.server.tools.base import Tool
@@ -182,13 +182,13 @@ def create_app(config: ServerConfig | None = None, bridge_enabled: bool | None =
             }
 
         try:
-            handler = HttpBridgeHandler(url, timeout=1.0)
+            handler = HttpBridgeHandler(url, timeout=get_bridge_ping_timeout_seconds())
             resp = handler("system.ping", ActionMessage(route="system.ping", payload={}).to_dict())
             reachable = bool(isinstance(resp, dict) and resp.get("ok"))
             if not reachable:
                 err = resp.get("error") if isinstance(resp, dict) else None
                 if isinstance(err, dict):
-                    last_error = err.get("message") or str(err)
+                    last_error = err.get("message") or err.get("error") or str(err)
                 elif err:
                     last_error = str(err)
                 else:

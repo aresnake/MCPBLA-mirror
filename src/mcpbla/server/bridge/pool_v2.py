@@ -35,10 +35,11 @@ class BridgePoolV2:
                 lifecycle.record_success()
             else:
                 err = resp.get("error") if isinstance(resp, dict) else None
+                code = resp.get("code") if isinstance(resp, dict) else None
                 if isinstance(err, dict):
-                    lifecycle.record_error(err.get("code", "BRIDGE_ERROR"), err.get("message", "Bridge error"))
+                    lifecycle.record_error(err.get("code", code or "BRIDGE_ERROR"), err.get("message", "Bridge error"))
                 else:
-                    lifecycle.record_error("BRIDGE_ERROR", "Bridge handler returned invalid response")
+                    lifecycle.record_error(code or "BRIDGE_ERROR", str(err) if err else "Bridge handler returned invalid response")
             return resp
         except (TimeoutError, OSError, ConnectionError) as exc:
             lifecycle.record_error("BRIDGE_UNREACHABLE", str(exc))
@@ -61,10 +62,11 @@ class BridgePoolV2:
                 lifecycle.record_success()
             else:
                 err = resp.get("error") if isinstance(resp, dict) else None
+                code = resp.get("code") if isinstance(resp, dict) else None
                 if isinstance(err, dict):
-                    lifecycle.record_error(err.get("code", "BRIDGE_ERROR"), err.get("message", "Bridge error"))
+                    lifecycle.record_error(err.get("code", code or "BRIDGE_ERROR"), err.get("message", "Bridge error"))
                 else:
-                    lifecycle.record_error("BRIDGE_ERROR", "Bridge handler returned invalid response")
+                    lifecycle.record_error(code or "BRIDGE_ERROR", str(err) if err else "Bridge handler returned invalid response")
             return resp
         except (TimeoutError, OSError, ConnectionError) as exc:
             lifecycle.record_error("BRIDGE_UNREACHABLE", str(exc))
@@ -88,10 +90,11 @@ class BridgePoolV2:
                 lifecycle.record_success()
             else:
                 err = resp.get("error") if isinstance(resp, dict) else None
+                code = resp.get("code") if isinstance(resp, dict) else None
                 if isinstance(err, dict):
-                    lifecycle.record_error(err.get("code", "BRIDGE_ERROR"), err.get("message", "Bridge error"))
+                    lifecycle.record_error(err.get("code", code or "BRIDGE_ERROR"), err.get("message", "Bridge error"))
                 else:
-                    lifecycle.record_error("BRIDGE_ERROR", "Bridge handler returned invalid response")
+                    lifecycle.record_error(code or "BRIDGE_ERROR", str(err) if err else "Bridge handler returned invalid response")
             return resp
         except (TimeoutError, OSError, ConnectionError) as exc:
             lifecycle.record_error("BRIDGE_UNREACHABLE", str(exc))

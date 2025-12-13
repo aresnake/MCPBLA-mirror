@@ -23,6 +23,7 @@ pip install -e .
 - Clean invoke path: `POST /tools/{name}/invoke_v2` (returns tool payload directly).
 - Quick doctor check: `pwsh -File .\scripts\doctor.ps1`
 - Status endpoint: `curl http://127.0.0.1:8000/status` (or PowerShell `Invoke-WebRequest http://127.0.0.1:8000/status | Select-Object -ExpandProperty Content`)
+- Bridge timeouts (env): `BRIDGE_TIMEOUT_SECONDS` (default 5.0), `BRIDGE_PING_TIMEOUT_SECONDS` (default 1.0)
 
 Bridge mode (requires a live bridge endpoint):
 - Set `BRIDGE_URL`, then run: `pwsh -File .\scripts\run_server_bridge.ps1`

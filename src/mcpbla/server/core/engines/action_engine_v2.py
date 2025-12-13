@@ -23,7 +23,13 @@ class ActionEngineV2:
             resp = self.pool.send_action(msg)
             if isinstance(resp, dict) and resp.get("ok"):
                 return ContractResult(ok=True, data=resp.get("data"))
-            return ContractResult(ok=False, error=(resp.get("error") if isinstance(resp, dict) else "Unknown error"))
+            if isinstance(resp, dict):
+                err_obj = resp.get("error")
+                code = resp.get("code")
+                if not isinstance(err_obj, dict) and code:
+                    err_obj = {"code": code, "message": err_obj}
+                return ContractResult(ok=False, data=resp.get("data"), error=err_obj or resp.get("error") or resp)
+            return ContractResult(ok=False, error="Unknown error")
         except Exception as exc:  # noqa: BLE001
             return ContractResult(ok=False, error=str(exc))
 
@@ -44,4 +50,3 @@ class ActionEngineV2:
             return ContractResult(ok=False, error=(resp.get("error") if isinstance(resp, dict) else "Unknown error"))
         except Exception as exc:  # noqa: BLE001
             return ContractResult(ok=False, error=str(exc))
-

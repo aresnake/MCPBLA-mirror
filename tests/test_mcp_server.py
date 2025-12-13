@@ -4,6 +4,7 @@ from mcpbla.server.bridge.scenegraph_live import clear_registry
 from mcpbla.server.bridge import scene_state
 from mcpbla.server.bridge.events import EVENT_BUS
 from mcpbla.server.mcp_server import create_app
+from mcpbla.server.bridge.http_bridge import get_http_handler_from_env, DEFAULT_TIMEOUT
 
 
 def test_healthcheck():
@@ -300,3 +301,28 @@ def test_alias_description_labeling():
     tools = {t["name"]: t for t in resp.json()}
     assert tools["echo_text"]["description"].startswith("[ALIAS of echo]")
     assert not tools["echo"]["description"].startswith("[ALIAS")
+
+
+def test_bridge_tool_unreachable_returns_code(monkeypatch):
+    for var in ["BLENDER_BRIDGE_URL", "BLENDER_BRIDGE_ENABLED"]:
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("BRIDGE_ENABLED", "true")
+    monkeypatch.setenv("BRIDGE_URL", "http://127.0.0.1:59997")
+    monkeypatch.setenv("BRIDGE_TIMEOUT_SECONDS", "0.1")
+
+    client = TestClient(create_app())
+    resp = client.post("/tools/create_cube/invoke_v2", json={"arguments": {"size": 1.0, "name": "NoBridge"}})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body.get("ok") is False
+    assert body.get("code") in {"BRIDGE_UNREACHABLE", "BRIDGE_TIMEOUT"}
+    assert body.get("details", {}).get("attempts") in {1, 2}
+
+
+def test_bridge_timeout_env_invalid(monkeypatch):
+    monkeypatch.setenv("BRIDGE_URL", "http://127.0.0.1:59997")
+    monkeypatch.setenv("BRIDGE_ENABLED", "true")
+    monkeypatch.setenv("BRIDGE_TIMEOUT_SECONDS", "notanumber")
+    handler = get_http_handler_from_env(force_enabled=True)
+    assert handler is not None
+    assert handler.timeout == DEFAULT_TIMEOUT
