@@ -47,6 +47,16 @@ def test_echo_tool_invoke():
     assert data["result"]["result"]["text"] == "ping"
 
 
+def test_echo_tool_invoke_v2():
+    client = TestClient(create_app())
+    payload = {"arguments": {"text": "ping"}}
+    resp = client.post("/tools/echo/invoke_v2", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["ok"] is True
+    assert data["result"]["text"] == "ping"
+
+
 def test_scene_snapshot_flow():
     clear_registry()
     client = TestClient(create_app(bridge_enabled=True))
@@ -241,6 +251,15 @@ def test_move_object_stub_invalid_delta():
     data = resp.json().get("result", {})
     assert data.get("ok") is False
     assert data.get("code") == "INVALID_ARG"
+
+
+def test_move_object_invoke_v2_missing_args():
+    client = TestClient(create_app(bridge_enabled=True))
+    resp = client.post("/tools/move_object/invoke_v2", json={"arguments": {}})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body.get("ok") is False
+    assert body.get("code") == "MISSING_ARG"
 
 
 def test_echo_alias_matches_canonical():

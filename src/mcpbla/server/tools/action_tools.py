@@ -41,9 +41,9 @@ def _create_cube_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as exc:  # noqa: BLE001
         return err(BRIDGE_UNREACHABLE, "Bridge unreachable", {"error": str(exc)})
     if result.ok:
-        return ok({"ok": result.ok, "data": result.data, "error": result.error})
+        return ok(result.data)
     error_msg = result.error if isinstance(result.error, str) else str(result.error)
-    return err(INTERNAL_ERROR, error_msg or "Action failed", {"data": result.data})
+    return err(INTERNAL_ERROR, "Action failed", {"error": error_msg, "data": result.data})
 
 
 def _move_object_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
@@ -63,9 +63,9 @@ def _move_object_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as exc:  # noqa: BLE001
         return err(BRIDGE_UNREACHABLE, "Bridge unreachable", {"error": str(exc)})
     if result.ok:
-        return ok({"ok": result.ok, "data": result.data, "error": result.error})
+        return ok(result.data)
     error_msg = result.error if isinstance(result.error, str) else str(result.error)
-    return err(INTERNAL_ERROR, error_msg or "Action failed", {"data": result.data})
+    return err(INTERNAL_ERROR, "Action failed", {"error": error_msg, "data": result.data})
 
 
 def _assign_material_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
@@ -85,9 +85,9 @@ def _assign_material_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as exc:  # noqa: BLE001
         return err(BRIDGE_UNREACHABLE, "Bridge unreachable", {"error": str(exc)})
     if result.ok:
-        return ok({"ok": result.ok, "data": result.data, "error": result.error})
+        return ok(result.data)
     error_msg = result.error if isinstance(result.error, str) else str(result.error)
-    return err(INTERNAL_ERROR, error_msg or "Action failed", {"data": result.data})
+    return err(INTERNAL_ERROR, "Action failed", {"error": error_msg, "data": result.data})
 
 
 def _apply_modifier_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
@@ -107,9 +107,9 @@ def _apply_modifier_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as exc:  # noqa: BLE001
         return err(BRIDGE_UNREACHABLE, "Bridge unreachable", {"error": str(exc)})
     if result.ok:
-        return ok({"ok": result.ok, "data": result.data, "error": result.error})
+        return ok(result.data)
     error_msg = result.error if isinstance(result.error, str) else str(result.error)
-    return err(INTERNAL_ERROR, error_msg or "Action failed", {"data": result.data})
+    return err(INTERNAL_ERROR, "Action failed", {"error": error_msg, "data": result.data})
 
 
 def get_tools() -> List[Tool]:

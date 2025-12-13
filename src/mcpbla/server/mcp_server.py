@@ -4,6 +4,7 @@ import os
 from typing import Any, Dict, List
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from mcpbla.server.bridge.env import resolve_bridge_enabled, resolve_bridge_url
@@ -92,6 +93,33 @@ def create_app(config: ServerConfig | None = None, bridge_enabled: bool | None =
             logger.exception("Tool execution failed")
             raise HTTPException(status_code=500, detail=str(exc)) from exc
         return {"tool": tool_name, "result": result}
+
+    @app.post("/tools/{tool_name}/invoke_v2")
+    async def invoke_tool_v2(tool_name: str, payload: ToolInvokeRequest) -> Dict[str, Any]:
+        tool = tools.get(tool_name)
+        if not tool:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "ok": False,
+                    "code": "NOT_FOUND",
+                    "error": "Tool not found",
+                    "details": {"tool_name": tool_name},
+                },
+            )
+        try:
+            return await tool.handler(payload.arguments)
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("Tool execution failed")
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "ok": False,
+                    "code": "INTERNAL_ERROR",
+                    "error": "Tool execution failed",
+                    "details": {"exception": str(exc)},
+                },
+            )
 
     @app.post("/blender/scene_snapshot")
     async def ingest_scene_snapshot(snapshot: SceneSnapshotModel) -> Dict[str, Any]:
