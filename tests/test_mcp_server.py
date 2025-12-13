@@ -143,3 +143,48 @@ def test_bridge_probe_unreachable_handler():
         assert data.get("last_error", {}).get("code") in {"BRIDGE_UNREACHABLE", "BRIDGE_ERROR"}
     finally:
         pool.set_handler(original)
+
+
+def test_bridge_status_disabled(monkeypatch):
+    for var in ["BRIDGE_ENABLED", "BLENDER_BRIDGE_ENABLED", "BRIDGE_URL", "BLENDER_BRIDGE_URL"]:
+        monkeypatch.delenv(var, raising=False)
+    client = TestClient(create_app(bridge_enabled=False))
+    resp = client.get("/bridge/status")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["enabled"] is False
+    assert data["configured"] is False
+    assert data["reachable"] is False
+    assert data["last_error"] is None
+
+
+def test_bridge_status_enabled_missing_url(monkeypatch):
+    for var in ["BRIDGE_URL", "BLENDER_BRIDGE_URL"]:
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("BRIDGE_ENABLED", "true")
+    monkeypatch.delenv("BLENDER_BRIDGE_ENABLED", raising=False)
+
+    client = TestClient(create_app())
+    resp = client.get("/bridge/status")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["enabled"] is True
+    assert data["configured"] is False
+    assert data["reachable"] is False
+    assert data["last_error"] == "BRIDGE_URL is missing"
+
+
+def test_bridge_status_unreachable(monkeypatch):
+    for var in ["BLENDER_BRIDGE_URL", "BLENDER_BRIDGE_ENABLED"]:
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("BRIDGE_ENABLED", "true")
+    monkeypatch.setenv("BRIDGE_URL", "http://127.0.0.1:59999")
+
+    client = TestClient(create_app())
+    resp = client.get("/bridge/status")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["configured"] is True
+    assert data["reachable"] is False
+    assert isinstance(data["last_error"], str)
+    assert data["last_error"]

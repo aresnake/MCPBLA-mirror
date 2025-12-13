@@ -6,6 +6,8 @@ from typing import Any, Dict, List
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from mcpbla.server.bridge.http_bridge import HttpBridgeHandler
+from mcpbla.server.bridge.messages import ActionMessage
 from mcpbla.server.bridge.events import EVENT_BUS
 from mcpbla.server.tools.base import Tool
 from mcpbla.server.tools.registry import build_tool_registry
@@ -128,6 +130,55 @@ def create_app(config: ServerConfig | None = None, bridge_enabled: bool | None =
     async def ingest_event(event: BridgeEventModel) -> Dict[str, Any]:
         EVENT_BUS.emit(event.event, event.data)
         return {"ok": True, "event": event.event, "correlation_id": event.correlation_id}
+
+    @app.get("/bridge/status")
+    async def bridge_status() -> Dict[str, Any]:
+        enabled = bool(bridge_is_enabled)
+        url = os.getenv("BRIDGE_URL") or os.getenv("BLENDER_BRIDGE_URL")
+        configured = bool(enabled and url)
+        reachable = False
+        last_error = None
+
+        if not enabled:
+            return {
+                "enabled": False,
+                "url": url,
+                "configured": False,
+                "reachable": False,
+                "last_error": None,
+            }
+
+        if not configured:
+            return {
+                "enabled": True,
+                "url": None,
+                "configured": False,
+                "reachable": False,
+                "last_error": "BRIDGE_URL is missing",
+            }
+
+        try:
+            handler = HttpBridgeHandler(url, timeout=1.0)
+            resp = handler("system.ping", ActionMessage(route="system.ping", payload={}).to_dict())
+            reachable = bool(isinstance(resp, dict) and resp.get("ok"))
+            if not reachable:
+                err = resp.get("error") if isinstance(resp, dict) else None
+                if isinstance(err, dict):
+                    last_error = err.get("message") or str(err)
+                elif err:
+                    last_error = str(err)
+                else:
+                    last_error = "Bridge unreachable"
+        except Exception as exc:  # noqa: BLE001
+            last_error = str(exc)
+
+        return {
+            "enabled": True,
+            "url": url,
+            "configured": True,
+            "reachable": reachable,
+            "last_error": last_error,
+        }
 
     return app
 
