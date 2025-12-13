@@ -67,6 +67,8 @@ def _echo_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _scene_snapshot_stub_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    if not arguments.get("session_id"):
+        return {"error": "session_id is required"}
     return record_stub_snapshot(arguments)
 
 
@@ -84,7 +86,11 @@ def _create_cube_handler(_: Dict[str, Any]) -> Dict[str, Any]:
 
 def _move_object_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     name = arguments.get("object_name")
-    delta = arguments.get("delta", [0, 0, 0])
+    if not name:
+        return {"error": "object_name is required"}
+    delta = arguments.get("delta")
+    if not isinstance(delta, list) or len(delta) != 3:
+        return {"error": "delta must be a length-3 array"}
     updated = scene_state.move_object(name, delta)
     return {"status": "moved", "object": name, "delta": delta, "location": updated["location"]}
 
@@ -92,6 +98,10 @@ def _move_object_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 def _assign_material_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     name = arguments.get("object_name")
     material = arguments.get("material")
+    if not name:
+        return {"error": "object_name is required"}
+    if material is None or material == "":
+        return {"error": "material is required"}
     scene_state.assign_material(name, material)
     return {"status": "material_assigned", "object": name, "material": material}
 
@@ -99,6 +109,10 @@ def _assign_material_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 def _apply_fx_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     name = arguments.get("object_name")
     fx = arguments.get("fx")
+    if not name:
+        return {"error": "object_name is required"}
+    if fx is None or fx == "":
+        return {"error": "fx is required"}
     scene_state.apply_fx(name, fx)
     return {"status": "fx_applied", "object": name, "fx": fx}
 
@@ -118,21 +132,19 @@ def get_tools(workspace_root: Path) -> List[Tool]:
         ),
         Tool(
             name="echo",
-            description="Echo back the provided text.",
+            description="Echo back the provided text (canonical).",
             input_schema={
                 "type": "object",
                 "properties": {"text": {"type": "string"}},
-                "required": ["text"],
             },
             handler=_async_wrapper(_echo_handler),
         ),
         Tool(
             name="echo_text",
-            description="Echo a piece of text.",
+            description="Echo a piece of text (alias of echo).",
             input_schema={
                 "type": "object",
                 "properties": {"text": {"type": "string"}},
-                "required": ["text"],
             },
             handler=_async_wrapper(_echo_handler),
         ),
@@ -146,7 +158,6 @@ def get_tools(workspace_root: Path) -> List[Tool]:
                     "objects": {"type": "array", "items": {"type": "object"}},
                     "metadata": {"type": "object"},
                 },
-                "required": ["session_id"],
             },
             handler=_async_wrapper(_scene_snapshot_stub_handler),
         ),

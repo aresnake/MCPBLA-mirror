@@ -28,10 +28,10 @@ def test_tools_metadata():
         "move_object_stub",
         "assign_material_stub",
         "apply_fx_stub",
-        "get_scene_state",
-    }
+            "get_scene_state",
+        }
     assert "echo_text" in tools
-    assert tools["echo_text"]["input_schema"]["required"] == ["text"]
+    assert tools["echo_text"]["input_schema"]["properties"]["text"]["type"] == "string"
 
 
 def test_echo_tool_invoke():
@@ -220,3 +220,30 @@ def test_bridge_status_legacy_url(monkeypatch):
     assert data["configured"] is True
     assert data["reachable"] is False
     assert isinstance(data["last_error"], str)
+
+
+def test_move_object_stub_requires_name():
+    client = TestClient(create_app())
+    resp = client.post("/tools/move_object_stub/invoke", json={"arguments": {"delta": [0, 1, 2]}})
+    assert resp.status_code == 200
+    data = resp.json().get("result", {})
+    assert data.get("error") == "object_name is required"
+
+
+def test_echo_alias_matches_canonical():
+    client = TestClient(create_app())
+    payload = {"arguments": {"text": "hello"}}
+    resp_echo = client.post("/tools/echo/invoke", json=payload)
+    resp_alias = client.post("/tools/echo_text/invoke", json=payload)
+    assert resp_echo.status_code == 200
+    assert resp_alias.status_code == 200
+    assert resp_echo.json()["result"] == resp_alias.json()["result"]
+
+
+def test_tools_list_includes_aliases():
+    client = TestClient(create_app())
+    resp = client.get("/tools")
+    assert resp.status_code == 200
+    names = {tool["name"] for tool in resp.json()}
+    assert "echo" in names
+    assert "echo_text" in names

@@ -25,6 +25,8 @@ def _create_cube_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """Create a cube through the action engine."""
     engine = _create_engine()
     name = arguments.get("name")
+    if not name:
+        return {"ok": False, "error": "name is required"}
     size = float(arguments.get("size", 1.0))
     result = engine.execute("create_cube", {"name": name, "size": size})
     return {"ok": result.ok, "data": result.data, "error": result.error}
@@ -34,7 +36,14 @@ def _move_object_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """Move an object using the action engine translation op."""
     engine = _create_engine()
     name = arguments.get("name")
-    translation = arguments.get("translation", {})
+    if not name:
+        return {"ok": False, "error": "name is required"}
+    translation = arguments.get("translation")
+    if not isinstance(translation, dict):
+        return {"ok": False, "error": "translation must be an object"}
+    for axis in ("x", "y", "z"):
+        if axis not in translation:
+            return {"ok": False, "error": f"translation.{axis} is required"}
     result = engine.execute("move_object", {"name": name, "translation": translation})
     return {"ok": result.ok, "data": result.data, "error": result.error}
 
@@ -44,7 +53,13 @@ def _assign_material_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     engine = _create_engine()
     obj = arguments.get("object")
     material = arguments.get("material")
-    color = arguments.get("color", [])
+    color = arguments.get("color")
+    if not obj:
+        return {"ok": False, "error": "object is required"}
+    if material is None or material == "":
+        return {"ok": False, "error": "material is required"}
+    if not isinstance(color, list) or len(color) != 3:
+        return {"ok": False, "error": "color must be a length-3 array"}
     result = engine.execute("assign_material", {"object": obj, "material": material, "color": color})
     return {"ok": result.ok, "data": result.data, "error": result.error}
 
@@ -54,7 +69,13 @@ def _apply_modifier_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     engine = _create_engine()
     obj = arguments.get("object")
     mod_type = arguments.get("type")
-    settings = arguments.get("settings", {})
+    settings = arguments.get("settings")
+    if not obj:
+        return {"ok": False, "error": "object is required"}
+    if mod_type is None or mod_type == "":
+        return {"ok": False, "error": "type is required"}
+    if not isinstance(settings, dict):
+        return {"ok": False, "error": "settings must be an object"}
     result = engine.execute("apply_modifier", {"object": obj, "type": mod_type, "settings": settings})
     return {"ok": result.ok, "data": result.data, "error": result.error}
 
@@ -71,7 +92,7 @@ def get_tools() -> List[Tool]:
                     "size": {"type": "number"},
                     "name": {"type": "string"},
                 },
-                "required": ["size", "name"],
+                "required": ["name"],
             },
             handler=_async_wrapper(_create_cube_handler),
         ),

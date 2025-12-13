@@ -59,7 +59,11 @@ def _create_sphere_handler(_: Dict[str, Any]) -> Dict[str, Any]:
 def _move_object_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """Move an object by delta in the in-memory scene state."""
     name = arguments.get("object_name")
-    delta = arguments.get("delta", [0, 0, 0])
+    if not name:
+        return {"error": "object_name is required"}
+    delta = arguments.get("delta")
+    if not isinstance(delta, list) or len(delta) != 3:
+        return {"error": "delta must be a length-3 array"}
     updated = scene_state.move_object(name, delta)
     return {"status": "moved", "object": name, "delta": delta, "location": updated["location"]}
 
@@ -68,6 +72,10 @@ def _assign_material_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """Assign a material marker to an object in the in-memory state."""
     name = arguments.get("object_name")
     material = arguments.get("material")
+    if not name:
+        return {"error": "object_name is required"}
+    if material is None or material == "":
+        return {"error": "material is required"}
     scene_state.assign_material(name, material)
     return {"status": "material_assigned", "object": name, "material": material}
 
@@ -76,6 +84,10 @@ def _apply_fx_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """Apply a simple FX marker to an object in the in-memory state."""
     name = arguments.get("object_name")
     fx = arguments.get("fx")
+    if not name:
+        return {"error": "object_name is required"}
+    if fx is None or fx == "":
+        return {"error": "fx is required"}
     scene_state.apply_fx(name, fx)
     return {"status": "fx_applied", "object": name, "fx": fx}
 
@@ -90,11 +102,10 @@ def get_tools(workspace_root) -> List[Tool]:
     return [
         Tool(
             name="echo_text",
-            description="Echo a piece of text.",
+            description="Echo a piece of text (alias of echo).",
             input_schema={
                 "type": "object",
                 "properties": {"text": {"type": "string"}},
-                "required": ["text"],
             },
             handler=_async_wrapper(_echo_text_handler),
         ),
@@ -110,7 +121,6 @@ def get_tools(workspace_root) -> List[Tool]:
             input_schema={
                 "type": "object",
                 "properties": {"session_id": {"type": "string"}},
-                "required": ["session_id"],
             },
             handler=_async_wrapper(_get_last_scene_snapshot_handler),
         ),
