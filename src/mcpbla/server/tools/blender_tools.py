@@ -7,6 +7,7 @@ from typing import Any, Dict, List
 
 from mcpbla.server.bridge import scenegraph_live, scene_state
 from mcpbla.server.tools.base import Tool
+from mcpbla.server.tools.tool_response import INVALID_ARG, MISSING_ARG, ok, err
 
 
 def get_scenegraph_snapshot() -> Dict[str, Any]:
@@ -17,7 +18,7 @@ def get_scenegraph_snapshot() -> Dict[str, Any]:
 def _echo_text_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """Echo the provided text payload."""
     text = arguments.get("text", "")
-    return {"text": text}
+    return ok({"text": text})
 
 
 def _list_workspace_files_handler(workspace_root: Path) -> Dict[str, Any]:
@@ -35,8 +36,8 @@ def _get_last_scene_snapshot_handler(arguments: Dict[str, Any]) -> Dict[str, Any
     if snapshot is None:
         snapshot = scenegraph_live.get_last_snapshot()
     if snapshot is None:
-        return {"error": f"No snapshot for session_id '{session_id}'"}
-    return scenegraph_live.ScenegraphLive.serialize_snapshot(snapshot)
+        return err(INVALID_ARG, f"No snapshot for session_id '{session_id}'")
+    return ok(scenegraph_live.ScenegraphLive.serialize_snapshot(snapshot))
 
 
 def _get_scenegraph_snapshot_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
@@ -47,25 +48,25 @@ def _get_scenegraph_snapshot_handler(arguments: Dict[str, Any]) -> Dict[str, Any
 def _create_cube_handler(_: Dict[str, Any]) -> Dict[str, Any]:
     """Insert a cube placeholder into the in-memory scene state."""
     scene_state.upsert_object("Cube", type="MESH", location=[0.0, 0.0, 0.0])
-    return {"status": "created", "object": "Cube"}
+    return ok({"status": "created", "object": "Cube"})
 
 
 def _create_sphere_handler(_: Dict[str, Any]) -> Dict[str, Any]:
     """Insert a sphere placeholder into the in-memory scene state."""
     scene_state.upsert_object("Sphere", type="MESH", location=[0.0, 0.0, 0.0])
-    return {"status": "created", "object": "Sphere"}
+    return ok({"status": "created", "object": "Sphere"})
 
 
 def _move_object_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """Move an object by delta in the in-memory scene state."""
     name = arguments.get("object_name")
     if not name:
-        return {"error": "object_name is required"}
+        return err(MISSING_ARG, "object_name is required")
     delta = arguments.get("delta")
     if not isinstance(delta, list) or len(delta) != 3:
-        return {"error": "delta must be a length-3 array"}
+        return err(INVALID_ARG, "delta must be a length-3 array")
     updated = scene_state.move_object(name, delta)
-    return {"status": "moved", "object": name, "delta": delta, "location": updated["location"]}
+    return ok({"status": "moved", "object": name, "delta": delta, "location": updated["location"]})
 
 
 def _assign_material_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
@@ -73,11 +74,11 @@ def _assign_material_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     name = arguments.get("object_name")
     material = arguments.get("material")
     if not name:
-        return {"error": "object_name is required"}
+        return err(MISSING_ARG, "object_name is required")
     if material is None or material == "":
-        return {"error": "material is required"}
+        return err(MISSING_ARG, "material is required")
     scene_state.assign_material(name, material)
-    return {"status": "material_assigned", "object": name, "material": material}
+    return ok({"status": "material_assigned", "object": name, "material": material})
 
 
 def _apply_fx_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
@@ -85,16 +86,16 @@ def _apply_fx_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     name = arguments.get("object_name")
     fx = arguments.get("fx")
     if not name:
-        return {"error": "object_name is required"}
+        return err(MISSING_ARG, "object_name is required")
     if fx is None or fx == "":
-        return {"error": "fx is required"}
+        return err(MISSING_ARG, "fx is required")
     scene_state.apply_fx(name, fx)
-    return {"status": "fx_applied", "object": name, "fx": fx}
+    return ok({"status": "fx_applied", "object": name, "fx": fx})
 
 
 def _get_scene_state_handler(_: Dict[str, Any]) -> Dict[str, Any]:
     """Return the current logical scene state."""
-    return scene_state.get_scene_state()
+    return ok(scene_state.get_scene_state())
 
 
 def get_tools(workspace_root) -> List[Tool]:

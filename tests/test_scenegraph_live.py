@@ -31,6 +31,7 @@ def test_get_scenegraph_snapshot_tool_handler():
     snapshot = SceneSnapshot(session_id="demo2", objects=[{"name": "Cube"}], metadata={"source": "test"})
     store_snapshot(snapshot)
     result = _get_scenegraph_snapshot_handler({"session_id": "demo2"})
-    assert result["session_id"] == "demo2"
-    assert result["objects"][0]["name"] == "Cube"
-
+    assert result["ok"] is True
+    payload = result["result"]
+    assert payload["session_id"] == "demo2"
+    assert payload["objects"][0]["name"] == "Cube"

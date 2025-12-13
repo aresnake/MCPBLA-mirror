@@ -8,6 +8,12 @@ from typing import Any, Dict, List
 
 from mcpbla.server.bridge import scene_state
 from mcpbla.server.tools.base import Tool
+from mcpbla.server.tools.tool_response import (
+    INVALID_ARG,
+    MISSING_ARG,
+    ok,
+    err,
+)
 
 _STUB_SNAPSHOTS: List[Dict[str, Any]] = []
 
@@ -59,66 +65,66 @@ def _async_wrapper(func):
 
 
 def _ping_handler(_: Dict[str, Any]) -> Dict[str, Any]:
-    return {"ok": True}
+    return ok({"ok": True})
 
 
 def _echo_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
-    return {"text": str(arguments.get("text", ""))}
+    return ok({"text": str(arguments.get("text", ""))})
 
 
 def _scene_snapshot_stub_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     if not arguments.get("session_id"):
-        return {"error": "session_id is required"}
-    return record_stub_snapshot(arguments)
+        return err(MISSING_ARG, "session_id is required")
+    return ok(record_stub_snapshot(arguments))
 
 
 def _list_workspace_files_handler(workspace_root: Path) -> Dict[str, Any]:
     entries = []
     for item in workspace_root.iterdir():
         entries.append(item.name + ("/" if item.is_dir() else ""))
-    return {"files": sorted(entries)}
+    return ok({"files": sorted(entries)})
 
 
 def _create_cube_handler(_: Dict[str, Any]) -> Dict[str, Any]:
     scene_state.upsert_object("Cube", type="MESH", location=[0.0, 0.0, 0.0])
-    return {"status": "created", "object": "Cube"}
+    return ok({"status": "created", "object": "Cube"})
 
 
 def _move_object_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     name = arguments.get("object_name")
     if not name:
-        return {"error": "object_name is required"}
+        return err(MISSING_ARG, "object_name is required")
     delta = arguments.get("delta")
     if not isinstance(delta, list) or len(delta) != 3:
-        return {"error": "delta must be a length-3 array"}
+        return err(INVALID_ARG, "delta must be a length-3 array")
     updated = scene_state.move_object(name, delta)
-    return {"status": "moved", "object": name, "delta": delta, "location": updated["location"]}
+    return ok({"status": "moved", "object": name, "delta": delta, "location": updated["location"]})
 
 
 def _assign_material_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     name = arguments.get("object_name")
     material = arguments.get("material")
     if not name:
-        return {"error": "object_name is required"}
+        return err(MISSING_ARG, "object_name is required")
     if material is None or material == "":
-        return {"error": "material is required"}
+        return err(MISSING_ARG, "material is required")
     scene_state.assign_material(name, material)
-    return {"status": "material_assigned", "object": name, "material": material}
+    return ok({"status": "material_assigned", "object": name, "material": material})
 
 
 def _apply_fx_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     name = arguments.get("object_name")
     fx = arguments.get("fx")
     if not name:
-        return {"error": "object_name is required"}
+        return err(MISSING_ARG, "object_name is required")
     if fx is None or fx == "":
-        return {"error": "fx is required"}
+        return err(MISSING_ARG, "fx is required")
     scene_state.apply_fx(name, fx)
-    return {"status": "fx_applied", "object": name, "fx": fx}
+    return ok({"status": "fx_applied", "object": name, "fx": fx})
 
 
 def _get_scene_state_handler(_: Dict[str, Any]) -> Dict[str, Any]:
-    return scene_state.get_scene_state()
+    return ok(scene_state.get_scene_state())
 
 
 def get_tools(workspace_root: Path) -> List[Tool]:

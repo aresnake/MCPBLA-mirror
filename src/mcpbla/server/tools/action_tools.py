@@ -6,6 +6,14 @@ from typing import Any, Dict, List
 
 from mcpbla.server.agents.action_engine import ActionEngine
 from mcpbla.server.tools.base import Tool
+from mcpbla.server.tools.tool_response import (
+    BRIDGE_UNREACHABLE,
+    INVALID_ARG,
+    MISSING_ARG,
+    INTERNAL_ERROR,
+    ok,
+    err,
+)
 
 
 def _async_wrapper(func):
@@ -26,10 +34,16 @@ def _create_cube_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     engine = _create_engine()
     name = arguments.get("name")
     if not name:
-        return {"ok": False, "error": "name is required"}
+        return err(MISSING_ARG, "name is required")
     size = float(arguments.get("size", 1.0))
-    result = engine.execute("create_cube", {"name": name, "size": size})
-    return {"ok": result.ok, "data": result.data, "error": result.error}
+    try:
+        result = engine.execute("create_cube", {"name": name, "size": size})
+    except Exception as exc:  # noqa: BLE001
+        return err(BRIDGE_UNREACHABLE, "Bridge unreachable", {"error": str(exc)})
+    if result.ok:
+        return ok({"ok": result.ok, "data": result.data, "error": result.error})
+    error_msg = result.error if isinstance(result.error, str) else str(result.error)
+    return err(INTERNAL_ERROR, error_msg or "Action failed", {"data": result.data})
 
 
 def _move_object_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
@@ -37,15 +51,21 @@ def _move_object_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     engine = _create_engine()
     name = arguments.get("name")
     if not name:
-        return {"ok": False, "error": "name is required"}
+        return err(MISSING_ARG, "name is required")
     translation = arguments.get("translation")
     if not isinstance(translation, dict):
-        return {"ok": False, "error": "translation must be an object"}
+        return err(INVALID_ARG, "translation must be an object")
     for axis in ("x", "y", "z"):
         if axis not in translation:
-            return {"ok": False, "error": f"translation.{axis} is required"}
-    result = engine.execute("move_object", {"name": name, "translation": translation})
-    return {"ok": result.ok, "data": result.data, "error": result.error}
+            return err(MISSING_ARG, f"translation.{axis} is required")
+    try:
+        result = engine.execute("move_object", {"name": name, "translation": translation})
+    except Exception as exc:  # noqa: BLE001
+        return err(BRIDGE_UNREACHABLE, "Bridge unreachable", {"error": str(exc)})
+    if result.ok:
+        return ok({"ok": result.ok, "data": result.data, "error": result.error})
+    error_msg = result.error if isinstance(result.error, str) else str(result.error)
+    return err(INTERNAL_ERROR, error_msg or "Action failed", {"data": result.data})
 
 
 def _assign_material_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
@@ -55,13 +75,19 @@ def _assign_material_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     material = arguments.get("material")
     color = arguments.get("color")
     if not obj:
-        return {"ok": False, "error": "object is required"}
+        return err(MISSING_ARG, "object is required")
     if material is None or material == "":
-        return {"ok": False, "error": "material is required"}
+        return err(MISSING_ARG, "material is required")
     if not isinstance(color, list) or len(color) != 3:
-        return {"ok": False, "error": "color must be a length-3 array"}
-    result = engine.execute("assign_material", {"object": obj, "material": material, "color": color})
-    return {"ok": result.ok, "data": result.data, "error": result.error}
+        return err(INVALID_ARG, "color must be a length-3 array")
+    try:
+        result = engine.execute("assign_material", {"object": obj, "material": material, "color": color})
+    except Exception as exc:  # noqa: BLE001
+        return err(BRIDGE_UNREACHABLE, "Bridge unreachable", {"error": str(exc)})
+    if result.ok:
+        return ok({"ok": result.ok, "data": result.data, "error": result.error})
+    error_msg = result.error if isinstance(result.error, str) else str(result.error)
+    return err(INTERNAL_ERROR, error_msg or "Action failed", {"data": result.data})
 
 
 def _apply_modifier_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
@@ -71,13 +97,19 @@ def _apply_modifier_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     mod_type = arguments.get("type")
     settings = arguments.get("settings")
     if not obj:
-        return {"ok": False, "error": "object is required"}
+        return err(MISSING_ARG, "object is required")
     if mod_type is None or mod_type == "":
-        return {"ok": False, "error": "type is required"}
+        return err(MISSING_ARG, "type is required")
     if not isinstance(settings, dict):
-        return {"ok": False, "error": "settings must be an object"}
-    result = engine.execute("apply_modifier", {"object": obj, "type": mod_type, "settings": settings})
-    return {"ok": result.ok, "data": result.data, "error": result.error}
+        return err(INVALID_ARG, "settings must be an object")
+    try:
+        result = engine.execute("apply_modifier", {"object": obj, "type": mod_type, "settings": settings})
+    except Exception as exc:  # noqa: BLE001
+        return err(BRIDGE_UNREACHABLE, "Bridge unreachable", {"error": str(exc)})
+    if result.ok:
+        return ok({"ok": result.ok, "data": result.data, "error": result.error})
+    error_msg = result.error if isinstance(result.error, str) else str(result.error)
+    return err(INTERNAL_ERROR, error_msg or "Action failed", {"data": result.data})
 
 
 def get_tools() -> List[Tool]:

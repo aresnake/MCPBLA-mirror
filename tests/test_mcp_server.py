@@ -44,7 +44,7 @@ def test_echo_tool_invoke():
     resp = client.post("/tools/echo_text/invoke", json=payload)
     assert resp.status_code == 200
     data = resp.json()
-    assert data["result"]["text"] == "ping"
+    assert data["result"]["result"]["text"] == "ping"
 
 
 def test_scene_snapshot_flow():
@@ -59,7 +59,7 @@ def test_scene_snapshot_flow():
     assert ingest_resp.status_code == 200
     invoke_resp = client.post("/tools/get_last_scene_snapshot/invoke", json={"arguments": {"session_id": "demo_session"}})
     assert invoke_resp.status_code == 200
-    data = invoke_resp.json()["result"]
+    data = invoke_resp.json()["result"]["result"]
     assert data["session_id"] == "demo_session"
     assert data["objects"][0]["name"] == "Cube"
 
@@ -81,7 +81,7 @@ def test_get_scene_state_tool_http():
     client.post("/tools/create_cube_stub/invoke", json={"arguments": {}})
     resp = client.post("/tools/get_scene_state/invoke", json={"arguments": {}})
     assert resp.status_code == 200
-    state = resp.json().get("result", {})
+    state = resp.json().get("result", {}).get("result", {})
     assert "objects" in state
     assert "Cube" in state.get("objects", {})
 
@@ -92,8 +92,7 @@ def test_action_tool_without_bridge_handler():
     assert resp.status_code == 200
     result = resp.json().get("result", {})
     assert result.get("ok") is False
-    error = result.get("error", {})
-    assert error.get("code") in {"BRIDGE_NOT_CONFIGURED", "HTTP_ERROR", "BRIDGE_UNREACHABLE", "BRIDGE_ERROR"}
+    assert result.get("code") in {"INTERNAL_ERROR", "BRIDGE_UNREACHABLE"}
 
 
 def test_bridge_event_ingress_triggers_event_bus():
@@ -231,7 +230,17 @@ def test_move_object_stub_requires_name():
     resp = client.post("/tools/move_object_stub/invoke", json={"arguments": {"delta": [0, 1, 2]}})
     assert resp.status_code == 200
     data = resp.json().get("result", {})
-    assert data.get("error") == "object_name is required"
+    assert data.get("ok") is False
+    assert data.get("code") == "MISSING_ARG"
+
+
+def test_move_object_stub_invalid_delta():
+    client = TestClient(create_app())
+    resp = client.post("/tools/move_object_stub/invoke", json={"arguments": {"object_name": "Cube", "delta": [1, 2]}})
+    assert resp.status_code == 200
+    data = resp.json().get("result", {})
+    assert data.get("ok") is False
+    assert data.get("code") == "INVALID_ARG"
 
 
 def test_echo_alias_matches_canonical():
