@@ -20,6 +20,33 @@ class BridgePoolV2:
     def has_handler(self) -> bool:
         return self.router.handler is not None
 
+    def route(self, route: str, payload: dict) -> Dict[str, Any]:
+        """Direct routing helper that mirrors send_action but accepts raw route/payload."""
+        if not self.router.handler:
+            lifecycle.set_configured(False)
+            lifecycle.record_error("BRIDGE_NOT_CONFIGURED", "Bridge handler not configured")
+            return {
+                "ok": False,
+                "error": {"code": "BRIDGE_NOT_CONFIGURED", "message": "Bridge handler not configured"},
+            }
+        try:
+            resp = self.router.route(route, payload)
+            if isinstance(resp, dict) and resp.get("ok"):
+                lifecycle.record_success()
+            else:
+                err = resp.get("error") if isinstance(resp, dict) else None
+                if isinstance(err, dict):
+                    lifecycle.record_error(err.get("code", "BRIDGE_ERROR"), err.get("message", "Bridge error"))
+                else:
+                    lifecycle.record_error("BRIDGE_ERROR", "Bridge handler returned invalid response")
+            return resp
+        except (TimeoutError, OSError, ConnectionError) as exc:
+            lifecycle.record_error("BRIDGE_UNREACHABLE", str(exc))
+            return {"ok": False, "error": {"code": "BRIDGE_UNREACHABLE", "message": str(exc)}}
+        except Exception as exc:  # noqa: BLE001
+            lifecycle.record_error("BRIDGE_ERROR", str(exc))
+            return {"ok": False, "error": {"code": "BRIDGE_ERROR", "message": str(exc)}}
+
     def send_action(self, message: ActionMessage) -> Dict[str, Any]:
         if not self.router.handler:
             lifecycle.set_configured(False)

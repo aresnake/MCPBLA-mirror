@@ -17,6 +17,7 @@ except ImportError:  # pragma: no cover - Blender runtime only
 if bpy:
     from .bridge_client import BridgeClient
     from .ui.panel_diagnostics import CLASSES as DIAG_CLASSES, register as register_diag, unregister as unregister_diag
+    from .bridge.http_server import start_http_bridge, stop_http_bridge
 
     def get_or_create_cube(name: str = "Cube"):
         """Return an existing cube by name or create one at the origin."""
@@ -222,9 +223,17 @@ if bpy:
         for cls in _CLASSES:
             bpy.utils.register_class(cls)
         register_diag()
+        try:
+            start_http_bridge()
+        except Exception as exc:  # noqa: BLE001
+            print(f"[MCPBLA] Failed to start HTTP bridge: {exc}")
 
     def unregister():
         unregister_diag()
+        try:
+            stop_http_bridge()
+        except Exception:
+            pass
         for cls in reversed(_CLASSES):
             bpy.utils.unregister_class(cls)
 

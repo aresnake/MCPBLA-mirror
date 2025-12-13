@@ -37,7 +37,7 @@ except Exception:  # pragma: no cover
 
 def handle_route(route: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     emitter = BlenderEventEmitter(BridgeClient()) if BlenderEventEmitter and BridgeClient else None
-    if route == "action.execute.v2":
+    if route in {"action.execute.v2", "action.execute"}:
         result = actions.execute_action(payload) if actions else {"ok": False, "error": "actions not available"}
         if emitter and result.get("ok"):
             emitter.emit("action.completed", {"route": route, "result": result, "timestamp": None})
@@ -126,4 +126,3 @@ def handle_route(route: str, payload: Dict[str, Any]) -> Dict[str, Any]:
             results.append(handle_route(route_name, pl))
         return {"ok": all(r.get("ok") for r in results), "data": results}
     return {"ok": False, "error": {"code": "UNKNOWN_ROUTE", "message": f"Unknown route '{route}'"}}
-

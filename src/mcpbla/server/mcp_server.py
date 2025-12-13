@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from mcpbla.server.bridge import scenegraph_live
 from mcpbla.server.bridge.events import EVENT_BUS
 from mcpbla.server.bridge.scenegraph import SCENEGRAPH
+from mcpbla.server.bridge.startup import configure_bridge_from_env
 from mcpbla.server.tools.base import Tool
 from mcpbla.server.tools.registry import build_tool_registry
 from mcpbla.server.utils.config import ServerConfig, load_config
@@ -46,6 +47,9 @@ def create_app(config: ServerConfig | None = None) -> FastAPI:
     logger = setup_logging(cfg.log_level, __name__)
 
     app = FastAPI(title="MCP Blender Orchestrator", version="0.2.0")
+
+    # Optionally wire real bridge handler if explicitly enabled via env.
+    configure_bridge_from_env()
 
     tools: Dict[str, Tool] = build_tool_registry(cfg.workspace_root)
 
