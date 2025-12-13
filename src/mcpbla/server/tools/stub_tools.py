@@ -46,7 +46,8 @@ def get_stub_snapshot(session_id: str | None) -> Dict[str, Any]:
         for snap in reversed(_STUB_SNAPSHOTS):
             if snap.get("session_id") == session_id:
                 return deepcopy(snap)
-        return {"error": f\"No snapshot for session_id '{session_id}'\"}
+        return {"error": f"No snapshot for session_id '{session_id}'"}
+
     return deepcopy(_STUB_SNAPSHOTS[-1])
 
 
