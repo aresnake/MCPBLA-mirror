@@ -262,6 +262,18 @@ def test_move_object_invoke_v2_missing_args():
     assert body.get("code") == "MISSING_ARG"
 
 
+def test_status_endpoint():
+    client = TestClient(create_app())
+    resp = client.get("/status")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["ok"] is True
+    assert isinstance(data["tools"]["count"], int)
+    assert data["tools"]["count"] == len(client.get("/tools").json())
+    bridge_keys = {"enabled", "url", "configured", "reachable", "last_error"}
+    assert bridge_keys.issubset(set(data["bridge"].keys()))
+
+
 def test_echo_alias_matches_canonical():
     client = TestClient(create_app())
     payload = {"arguments": {"text": "hello"}}

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import time
 from typing import Any, Dict, List
 
 from fastapi import FastAPI, HTTPException
@@ -41,6 +42,7 @@ class BridgeEventModel(BaseModel):
 
 
 _SCENEGRAPH_SUBSCRIBED = False
+_PROCESS_START = time.time()
 
 
 def create_app(config: ServerConfig | None = None, bridge_enabled: bool | None = None) -> FastAPI:
@@ -200,6 +202,44 @@ def create_app(config: ServerConfig | None = None, bridge_enabled: bool | None =
             "configured": True,
             "reachable": reachable,
             "last_error": last_error,
+        }
+
+    def _git_sha() -> str | None:
+        env_sha = os.getenv("MCPBLA_GIT_SHA")
+        if env_sha:
+            return env_sha
+        head_path = os.path.join(os.getcwd(), ".git", "HEAD")
+        try:
+            with open(head_path, "r", encoding="utf-8") as head_file:
+                ref_line = head_file.read().strip()
+            if ref_line.startswith("ref:"):
+                ref_path = ref_line.split(" ", 1)[1].strip()
+                ref_full_path = os.path.join(os.getcwd(), ".git", ref_path)
+                with open(ref_full_path, "r", encoding="utf-8") as ref_file:
+                    return ref_file.read().strip()
+            if ref_line:
+                return ref_line
+        except FileNotFoundError:
+            return None
+        except Exception:  # noqa: BLE001
+            return None
+
+    @app.get("/status")
+    async def status() -> Dict[str, Any]:
+        bridge_info = await bridge_status()
+        tools_count = len(tools)
+        host = os.getenv("MCP_HOST", "127.0.0.1")
+        port = os.getenv("MCP_PORT", "8000")
+        return {
+            "ok": True,
+            "server": {
+                "host": host,
+                "port": int(port) if str(port).isdigit() else port,
+                "uptime_seconds": int(time.time() - _PROCESS_START),
+            },
+            "bridge": bridge_info,
+            "tools": {"count": tools_count},
+            "version": {"git_sha": _git_sha()},
         }
 
     return app

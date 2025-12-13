@@ -21,6 +21,8 @@ pip install -e .
 - Optional bridge diagnostics: `curl http://127.0.0.1:8000/bridge/status` (or `Invoke-WebRequest http://127.0.0.1:8000/bridge/status | Select-Object -ExpandProperty Content` in PowerShell).
 - Legacy tool invoke path: `POST /tools/{name}/invoke` (response wraps result).
 - Clean invoke path: `POST /tools/{name}/invoke_v2` (returns tool payload directly).
+- Quick doctor check: `pwsh -File .\scripts\doctor.ps1`
+- Status endpoint: `curl http://127.0.0.1:8000/status` (or PowerShell `Invoke-WebRequest http://127.0.0.1:8000/status | Select-Object -ExpandProperty Content`)
 
 Bridge mode (requires a live bridge endpoint):
 - Set `BRIDGE_URL`, then run: `pwsh -File .\scripts\run_server_bridge.ps1`
