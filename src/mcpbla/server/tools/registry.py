@@ -99,6 +99,7 @@ def _collect_bridge_tools(workspace_root: Path) -> List[Tool]:
     core_tools = [tool for tool in stub_get_tools(workspace_root) if tool.name in core_names]
     tools.extend(core_tools)
 
+    tools.sort(key=lambda t: t.name)
     return tools
 
 
@@ -143,6 +144,7 @@ def build_tool_registry(workspace_root: Path, bridge_enabled: bool | None = None
     tools = _collect_bridge_tools(workspace_root) if bridge_enabled else _collect_stub_tools(workspace_root)
 
     # En cas de doublon de nom, le dernier gagne.
+    tools.sort(key=lambda t: t.name)
     _REGISTRY = {tool.name: tool for tool in tools}
     _WORKSPACE_ROOT = workspace_root
     _CACHE_KEY = cache_key

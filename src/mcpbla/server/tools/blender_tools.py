@@ -102,7 +102,7 @@ def get_tools(workspace_root) -> List[Tool]:
     return [
         Tool(
             name="echo_text",
-            description="Echo a piece of text (alias of echo).",
+            description="[ALIAS of echo] Echo a piece of text.",
             input_schema={
                 "type": "object",
                 "properties": {"text": {"type": "string"}},

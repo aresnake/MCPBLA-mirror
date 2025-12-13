@@ -17,7 +17,8 @@ def test_tools_metadata():
     client = TestClient(create_app())
     resp = client.get("/tools")
     assert resp.status_code == 200
-    tools = {tool["name"]: tool for tool in resp.json()}
+    tools_list = resp.json()
+    tools = {tool["name"]: tool for tool in tools_list}
     assert set(tools.keys()) <= {
         "ping",
         "echo",
@@ -32,6 +33,9 @@ def test_tools_metadata():
         }
     assert "echo_text" in tools
     assert tools["echo_text"]["input_schema"]["properties"]["text"]["type"] == "string"
+    # Ensure list is sorted by name
+    names = [tool["name"] for tool in tools_list]
+    assert names == sorted(names)
 
 
 def test_echo_tool_invoke():
@@ -247,3 +251,12 @@ def test_tools_list_includes_aliases():
     names = {tool["name"] for tool in resp.json()}
     assert "echo" in names
     assert "echo_text" in names
+
+
+def test_alias_description_labeling():
+    client = TestClient(create_app())
+    resp = client.get("/tools")
+    assert resp.status_code == 200
+    tools = {t["name"]: t for t in resp.json()}
+    assert tools["echo_text"]["description"].startswith("[ALIAS of echo]")
+    assert not tools["echo"]["description"].startswith("[ALIAS")
