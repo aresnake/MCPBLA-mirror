@@ -1,15 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import asdict
+import os
 from typing import Any, Dict, List
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-from mcpbla.server.bridge import scenegraph_live
-from mcpbla.server.bridge.events import EVENT_BUS
-from mcpbla.server.bridge.scenegraph import SCENEGRAPH
-from mcpbla.server.bridge.startup import configure_bridge_from_env
 from mcpbla.server.tools.base import Tool
 from mcpbla.server.tools.registry import build_tool_registry
 from mcpbla.server.utils.config import ServerConfig, load_config
@@ -42,21 +38,43 @@ class BridgeEventModel(BaseModel):
 _SCENEGRAPH_SUBSCRIBED = False
 
 
-def create_app(config: ServerConfig | None = None) -> FastAPI:
+def _bridge_enabled_from_env() -> bool:
+    value = os.getenv("BRIDGE_ENABLED")
+    if value is None:
+        value = os.getenv("BLENDER_BRIDGE_ENABLED", "")
+    return str(value).lower() in {"1", "true", "yes", "on"}
+
+
+def create_app(config: ServerConfig | None = None, bridge_enabled: bool | None = None) -> FastAPI:
     cfg = config or load_config()
+    bridge_is_enabled = _bridge_enabled_from_env() if bridge_enabled is None else bridge_enabled
     logger = setup_logging(cfg.log_level, __name__)
 
     app = FastAPI(title="MCP Blender Orchestrator", version="0.2.0")
 
-    # Optionally wire real bridge handler if explicitly enabled via env.
-    configure_bridge_from_env()
+    tools: Dict[str, Tool] = build_tool_registry(cfg.workspace_root, bridge_enabled=bridge_is_enabled)
 
-    tools: Dict[str, Tool] = build_tool_registry(cfg.workspace_root)
+    scenegraph_live = None
+    event_bus = None
 
-    global _SCENEGRAPH_SUBSCRIBED
-    if not _SCENEGRAPH_SUBSCRIBED:
-        EVENT_BUS.subscribe("*", SCENEGRAPH.on_event)
-        _SCENEGRAPH_SUBSCRIBED = True
+    if bridge_is_enabled:
+        from mcpbla.server.bridge import scenegraph_live as bridge_scenegraph_live
+        from mcpbla.server.bridge.events import EVENT_BUS
+        from mcpbla.server.bridge.scenegraph import SCENEGRAPH
+        from mcpbla.server.bridge.startup import configure_bridge_from_env
+
+        # Optionally wire real bridge handler if explicitly enabled via env.
+        configure_bridge_from_env()
+
+        global _SCENEGRAPH_SUBSCRIBED
+        if not _SCENEGRAPH_SUBSCRIBED:
+            EVENT_BUS.subscribe("*", SCENEGRAPH.on_event)
+            _SCENEGRAPH_SUBSCRIBED = True
+
+        scenegraph_live = bridge_scenegraph_live
+        event_bus = EVENT_BUS
+    else:
+        logger.info("BRIDGE_ENABLED is false; running in stub mode without the Blender bridge.")
 
     @app.get("/health")
     async def health() -> Dict[str, str]:
@@ -85,6 +103,18 @@ def create_app(config: ServerConfig | None = None) -> FastAPI:
     async def ingest_scene_snapshot(snapshot: SceneSnapshotModel) -> Dict[str, Any]:
         if not snapshot.session_id:
             raise HTTPException(status_code=400, detail="session_id is required")
+
+        if not bridge_is_enabled or scenegraph_live is None:
+            stub_tool = tools.get("scene_snapshot_stub")
+            if stub_tool is None:
+                raise HTTPException(status_code=503, detail="Bridge disabled")
+            try:
+                snapshot_data = snapshot.model_dump() if hasattr(snapshot, "model_dump") else snapshot.dict()
+                return await stub_tool.handler(snapshot_data)
+            except Exception as exc:  # noqa: BLE001
+                logger.exception("Stub scene snapshot handling failed")
+                raise HTTPException(status_code=500, detail=str(exc)) from exc
+
         scene_snapshot = scenegraph_live.SceneSnapshot(
             session_id=snapshot.session_id, objects=snapshot.objects, metadata=snapshot.metadata
         )
@@ -98,7 +128,9 @@ def create_app(config: ServerConfig | None = None) -> FastAPI:
 
     @app.post("/bridge/event")
     async def ingest_event(event: BridgeEventModel) -> Dict[str, Any]:
-        EVENT_BUS.emit(event.event, event.data)
+        if not bridge_is_enabled or event_bus is None:
+            raise HTTPException(status_code=503, detail="Bridge disabled")
+        event_bus.emit(event.event, event.data)
         return {"ok": True, "event": event.event, "correlation_id": event.correlation_id}
 
     return app

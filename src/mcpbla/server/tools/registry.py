@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from .base import Tool
 
@@ -11,6 +12,7 @@ from .base import Tool
 
 _REGISTRY: Dict[str, Tool] = {}
 _WORKSPACE_ROOT: Optional[Path] = None
+_CACHE_KEY: Optional[Tuple[Path, bool]] = None
 
 
 def clear_registry() -> None:
@@ -20,9 +22,10 @@ def clear_registry() -> None:
     Utilisé par les tests (test_mcp_server.clear_registry()) pour repartir
     d'un état propre entre deux runs.
     """
-    global _REGISTRY, _WORKSPACE_ROOT
+    global _REGISTRY, _WORKSPACE_ROOT, _CACHE_KEY
     _REGISTRY = {}
     _WORKSPACE_ROOT = None
+    _CACHE_KEY = None
 
 
 # -------------------------------------------------------------------
@@ -30,7 +33,14 @@ def clear_registry() -> None:
 # -------------------------------------------------------------------
 
 
-def _collect_tools(workspace_root: Path) -> List[Tool]:
+def _env_bridge_enabled() -> bool:
+    raw = os.getenv("BRIDGE_ENABLED")
+    if raw is None:
+        raw = os.getenv("BLENDER_BRIDGE_ENABLED", "")
+    return str(raw).lower() in {"1", "true", "yes", "on"}
+
+
+def _collect_bridge_tools(workspace_root: Path) -> List[Tool]:
     """
     Collect all Tool instances exposed by the various tool modules.
 
@@ -86,12 +96,45 @@ def _collect_tools(workspace_root: Path) -> List[Tool]:
     return tools
 
 
+def _collect_stub_tools(workspace_root: Path) -> List[Tool]:
+    """
+    Collect a minimal set of tools when the bridge is disabled.
+    """
+    from .stub_tools import get_tools as stub_get_tools
+    from .action_tools import get_tools as action_get_tools
+    from .orchestrator_tools import get_tools as orch_get_tools
+    from .orchestrator_v3_tools import get_tools as orch_v3_get_tools
+    from .modeler_agent_v3_tools import get_tools as modeler_get_tools
+    from .shader_agent_v3_tools import get_tools as shader_get_tools
+    from .geo_agent_v3_tools import get_tools as geo_get_tools
+    from .animation_agent_v3_tools import get_tools as anim_get_tools
+    from .studio_tools import get_tools as studio_get_tools
+    from .system_tools import get_tools as system_get_tools
+    from .bridge_tools import get_tools as bridge_get_tools
+
+    tools: List[Tool] = []
+
+    tools.extend(stub_get_tools(workspace_root))
+    tools.extend(action_get_tools())
+    tools.extend(orch_get_tools())
+    tools.extend(orch_v3_get_tools())
+    tools.extend(modeler_get_tools())
+    tools.extend(shader_get_tools())
+    tools.extend(geo_get_tools())
+    tools.extend(anim_get_tools())
+    tools.extend(studio_get_tools())
+    tools.extend(system_get_tools())
+    tools.extend(bridge_get_tools())
+
+    return tools
+
+
 # -------------------------------------------------------------------
 # Public API used by mcp_server & orchestrators
 # -------------------------------------------------------------------
 
 
-def build_tool_registry(workspace_root: Path) -> Dict[str, Tool]:
+def build_tool_registry(workspace_root: Path, bridge_enabled: bool | None = None) -> Dict[str, Tool]:
     """
     Build (or return cached) registry mapping names -> Tool.
 
@@ -100,18 +143,23 @@ def build_tool_registry(workspace_root: Path) -> Dict[str, Tool]:
     - Les tests appellent clear_registry() avant create_app()
       pour forcer un rebuild propre.
     """
-    global _REGISTRY, _WORKSPACE_ROOT
+    global _REGISTRY, _WORKSPACE_ROOT, _CACHE_KEY
+
+    if bridge_enabled is None:
+        bridge_enabled = _env_bridge_enabled()
 
     # Cache simple : si même workspace_root et registry déjà construit,
     # on réutilise.
-    if _REGISTRY and _WORKSPACE_ROOT == workspace_root:
+    cache_key = (workspace_root, bridge_enabled)
+    if _REGISTRY and _WORKSPACE_ROOT == workspace_root and _CACHE_KEY == cache_key:
         return _REGISTRY
 
-    tools = _collect_tools(workspace_root)
+    tools = _collect_bridge_tools(workspace_root) if bridge_enabled else _collect_stub_tools(workspace_root)
 
     # En cas de doublon de nom, le dernier gagne.
     _REGISTRY = {tool.name: tool for tool in tools}
     _WORKSPACE_ROOT = workspace_root
+    _CACHE_KEY = cache_key
     return _REGISTRY
 
 
