@@ -6,6 +6,7 @@ from typing import Any, Dict, List
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from mcpbla.server.bridge.events import EVENT_BUS
 from mcpbla.server.tools.base import Tool
 from mcpbla.server.tools.registry import build_tool_registry
 from mcpbla.server.utils.config import ServerConfig, load_config
@@ -55,11 +56,9 @@ def create_app(config: ServerConfig | None = None, bridge_enabled: bool | None =
     tools: Dict[str, Tool] = build_tool_registry(cfg.workspace_root, bridge_enabled=bridge_is_enabled)
 
     scenegraph_live = None
-    event_bus = None
 
     if bridge_is_enabled:
         from mcpbla.server.bridge import scenegraph_live as bridge_scenegraph_live
-        from mcpbla.server.bridge.events import EVENT_BUS
         from mcpbla.server.bridge.scenegraph import SCENEGRAPH
         from mcpbla.server.bridge.startup import configure_bridge_from_env
 
@@ -72,7 +71,6 @@ def create_app(config: ServerConfig | None = None, bridge_enabled: bool | None =
             _SCENEGRAPH_SUBSCRIBED = True
 
         scenegraph_live = bridge_scenegraph_live
-        event_bus = EVENT_BUS
     else:
         logger.info("BRIDGE_ENABLED is false; running in stub mode without the Blender bridge.")
 
@@ -128,9 +126,7 @@ def create_app(config: ServerConfig | None = None, bridge_enabled: bool | None =
 
     @app.post("/bridge/event")
     async def ingest_event(event: BridgeEventModel) -> Dict[str, Any]:
-        if not bridge_is_enabled or event_bus is None:
-            raise HTTPException(status_code=503, detail="Bridge disabled")
-        event_bus.emit(event.event, event.data)
+        EVENT_BUS.emit(event.event, event.data)
         return {"ok": True, "event": event.event, "correlation_id": event.correlation_id}
 
     return app
