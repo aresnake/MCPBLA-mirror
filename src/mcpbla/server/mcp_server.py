@@ -63,7 +63,7 @@ def create_app(config: ServerConfig | None = None, bridge_enabled: bool | None =
         from mcpbla.server.bridge.startup import configure_bridge_from_env
 
         # Optionally wire real bridge handler if explicitly enabled via env.
-        configure_bridge_from_env()
+        configure_bridge_from_env(enabled_override=bridge_is_enabled)
 
         global _SCENEGRAPH_SUBSCRIBED
         if not _SCENEGRAPH_SUBSCRIBED:

@@ -46,10 +46,34 @@ class HttpBridgeHandler:
             return {"ok": False, "error": {"code": "HTTP_ERROR", "message": str(exc)}}
 
 
-def get_http_handler_from_env() -> Optional[Callable[[str, dict], Dict[str, Any]]]:
-    """Return an HTTP handler if BLENDER_BRIDGE_URL is configured."""
-    base = os.getenv("BLENDER_BRIDGE_URL") or ""
-    if not base.strip():
+def _resolve_bridge_url_from_env(force_enabled: bool = False) -> Optional[str]:
+    """Return a bridge URL from env, with sensible defaults when enabled."""
+    # Explicit URL wins
+    explicit = os.getenv("BLENDER_BRIDGE_URL") or os.getenv("BRIDGE_URL") or ""
+    if explicit.strip():
+        return explicit.strip()
+
+    # Construct from host/port if provided or if bridge explicitly enabled
+    enabled_env = str(os.getenv("BRIDGE_ENABLED") or os.getenv("BLENDER_BRIDGE_ENABLED") or "").lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+    enabled = enabled_env or force_enabled
+    host = os.getenv("BRIDGE_HOST") or os.getenv("BLENDER_BRIDGE_HOST") or "127.0.0.1"
+    port = os.getenv("BRIDGE_PORT") or os.getenv("BLENDER_BRIDGE_PORT") or "9876"
+    scheme = os.getenv("BRIDGE_SCHEME") or "http"
+
+    if enabled:
+        return f"{scheme}://{host}:{port}"
+    return None
+
+
+def get_http_handler_from_env(force_enabled: bool = False) -> Optional[Callable[[str, dict], Dict[str, Any]]]:
+    """Return an HTTP handler if bridge env configuration is available."""
+    base = _resolve_bridge_url_from_env(force_enabled=force_enabled)
+    if not base:
         return None
-    timeout = float(os.getenv("BLENDER_BRIDGE_TIMEOUT", "5"))
+    timeout = float(os.getenv("BLENDER_BRIDGE_TIMEOUT", os.getenv("BRIDGE_TIMEOUT", "5")))
     return HttpBridgeHandler(base, timeout=timeout)

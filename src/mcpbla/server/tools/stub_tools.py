@@ -82,11 +82,6 @@ def _create_cube_handler(_: Dict[str, Any]) -> Dict[str, Any]:
     return {"status": "created", "object": "Cube"}
 
 
-def _create_sphere_handler(_: Dict[str, Any]) -> Dict[str, Any]:
-    scene_state.upsert_object("Sphere", type="MESH", location=[0.0, 0.0, 0.0])
-    return {"status": "created", "object": "Sphere"}
-
-
 def _move_object_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
     name = arguments.get("object_name")
     delta = arguments.get("delta", [0, 0, 0])
@@ -110,16 +105,6 @@ def _apply_fx_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 def _get_scene_state_handler(_: Dict[str, Any]) -> Dict[str, Any]:
     return scene_state.get_scene_state()
-
-
-def _get_last_scene_snapshot_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
-    session_id = arguments.get("session_id")
-    return get_stub_snapshot(session_id)
-
-
-def _get_scenegraph_snapshot_handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
-    session_id = arguments.get("session_id")
-    return get_stub_snapshot(session_id)
 
 
 def get_tools(workspace_root: Path) -> List[Tool]:
@@ -172,35 +157,10 @@ def get_tools(workspace_root: Path) -> List[Tool]:
             handler=_async_wrapper(lambda _=None: _list_workspace_files_handler(workspace_root)),
         ),
         Tool(
-            name="get_last_scene_snapshot",
-            description="Retrieve the latest scene snapshot for a session.",
-            input_schema={
-                "type": "object",
-                "properties": {"session_id": {"type": "string"}},
-                "required": ["session_id"],
-            },
-            handler=_async_wrapper(_get_last_scene_snapshot_handler),
-        ),
-        Tool(
-            name="get_scenegraph_snapshot",
-            description="Return the last stored scene snapshot (scenegraph).",
-            input_schema={
-                "type": "object",
-                "properties": {"session_id": {"type": "string"}},
-            },
-            handler=_async_wrapper(_get_scenegraph_snapshot_handler),
-        ),
-        Tool(
             name="create_cube_stub",
             description="Create a cube in the scene (stub).",
             input_schema={"type": "object", "properties": {}},
             handler=_async_wrapper(_create_cube_handler),
-        ),
-        Tool(
-            name="create_sphere_stub",
-            description="Create a sphere in the scene (stub).",
-            input_schema={"type": "object", "properties": {}},
-            handler=_async_wrapper(_create_sphere_handler),
         ),
         Tool(
             name="move_object_stub",

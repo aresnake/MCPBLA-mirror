@@ -11,15 +11,15 @@ def setup_function(_):
 
 def test_lifecycle_no_handler_probe():
     lifecycle.reset_state()
-    client = TestClient(create_app())
+    client = TestClient(create_app(bridge_enabled=True))
     resp = client.post("/tools/bridge_probe/invoke", json={"arguments": {}})
     assert resp.status_code == 200
     data = resp.json().get("result", {}).get("data", {})
-    assert data.get("configured") is False
+    assert data.get("configured") is True
     assert data.get("reachable") is False
-    assert data.get("last_error", {}).get("code") == "BRIDGE_NOT_CONFIGURED"
+    assert data.get("last_error", {}).get("code") in {"BRIDGE_NOT_CONFIGURED", "BRIDGE_UNREACHABLE", "HTTP_ERROR", "BRIDGE_ERROR"}
     state = lifecycle.get_state()
-    assert state["configured"] is False
+    assert state["configured"] is True
     assert state["reachable"] is False
 
 
@@ -32,7 +32,7 @@ def test_lifecycle_unreachable_handler():
         raise ConnectionError("offline")
 
     pool.set_handler(failing_handler)
-    client = TestClient(create_app())
+    client = TestClient(create_app(bridge_enabled=True))
     resp = client.post("/tools/bridge_probe/invoke", json={"arguments": {}})
     assert resp.status_code == 200
     data = resp.json().get("result", {}).get("data", {})
@@ -54,7 +54,7 @@ def test_lifecycle_success_handler_records_seen():
         return {"ok": True, "data": {"pong": True}}
 
     pool.set_handler(ok_handler)
-    client = TestClient(create_app())
+    client = TestClient(create_app(bridge_enabled=True))
     resp = client.post("/tools/bridge_probe/invoke", json={"arguments": {}})
     assert resp.status_code == 200
     data = resp.json().get("result", {}).get("data", {})

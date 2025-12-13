@@ -49,6 +49,7 @@ def _collect_bridge_tools(workspace_root: Path) -> List[Tool]:
     registry.py.
     """
     from .blender_tools import get_tools as blender_get_tools
+    from .stub_tools import get_tools as stub_get_tools
     from .action_tools import get_tools as action_get_tools
     from .scenegraph_tools import get_tools as scenegraph_get_tools
     from .orchestrator_tools import get_tools as orch_get_tools
@@ -93,6 +94,11 @@ def _collect_bridge_tools(workspace_root: Path) -> List[Tool]:
     # Bridge health tools
     tools.extend(bridge_get_tools())
 
+    # Core lightweight tools should always be available (bridge or not)
+    core_names = {"ping", "echo"}
+    core_tools = [tool for tool in stub_get_tools(workspace_root) if tool.name in core_names]
+    tools.extend(core_tools)
+
     return tools
 
 
@@ -101,30 +107,10 @@ def _collect_stub_tools(workspace_root: Path) -> List[Tool]:
     Collect a minimal set of tools when the bridge is disabled.
     """
     from .stub_tools import get_tools as stub_get_tools
-    from .action_tools import get_tools as action_get_tools
-    from .orchestrator_tools import get_tools as orch_get_tools
-    from .orchestrator_v3_tools import get_tools as orch_v3_get_tools
-    from .modeler_agent_v3_tools import get_tools as modeler_get_tools
-    from .shader_agent_v3_tools import get_tools as shader_get_tools
-    from .geo_agent_v3_tools import get_tools as geo_get_tools
-    from .animation_agent_v3_tools import get_tools as anim_get_tools
-    from .studio_tools import get_tools as studio_get_tools
-    from .system_tools import get_tools as system_get_tools
-    from .bridge_tools import get_tools as bridge_get_tools
 
     tools: List[Tool] = []
 
     tools.extend(stub_get_tools(workspace_root))
-    tools.extend(action_get_tools())
-    tools.extend(orch_get_tools())
-    tools.extend(orch_v3_get_tools())
-    tools.extend(modeler_get_tools())
-    tools.extend(shader_get_tools())
-    tools.extend(geo_get_tools())
-    tools.extend(anim_get_tools())
-    tools.extend(studio_get_tools())
-    tools.extend(system_get_tools())
-    tools.extend(bridge_get_tools())
 
     return tools
 
