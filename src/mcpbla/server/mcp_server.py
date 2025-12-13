@@ -6,6 +6,7 @@ from typing import Any, Dict, List
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from mcpbla.server.bridge.env import resolve_bridge_enabled, resolve_bridge_url
 from mcpbla.server.bridge.http_bridge import HttpBridgeHandler
 from mcpbla.server.bridge.messages import ActionMessage
 from mcpbla.server.bridge.events import EVENT_BUS
@@ -41,16 +42,9 @@ class BridgeEventModel(BaseModel):
 _SCENEGRAPH_SUBSCRIBED = False
 
 
-def _bridge_enabled_from_env() -> bool:
-    value = os.getenv("BRIDGE_ENABLED")
-    if value is None:
-        value = os.getenv("BLENDER_BRIDGE_ENABLED", "")
-    return str(value).lower() in {"1", "true", "yes", "on"}
-
-
 def create_app(config: ServerConfig | None = None, bridge_enabled: bool | None = None) -> FastAPI:
     cfg = config or load_config()
-    bridge_is_enabled = _bridge_enabled_from_env() if bridge_enabled is None else bridge_enabled
+    bridge_is_enabled = resolve_bridge_enabled(explicit=bridge_enabled)
     logger = setup_logging(cfg.log_level, __name__)
 
     app = FastAPI(title="MCP Blender Orchestrator", version="0.2.0")
@@ -133,8 +127,8 @@ def create_app(config: ServerConfig | None = None, bridge_enabled: bool | None =
 
     @app.get("/bridge/status")
     async def bridge_status() -> Dict[str, Any]:
-        enabled = bool(bridge_is_enabled)
-        url = os.getenv("BRIDGE_URL") or os.getenv("BLENDER_BRIDGE_URL")
+        enabled = resolve_bridge_enabled()
+        url = resolve_bridge_url()
         configured = bool(enabled and url)
         reachable = False
         last_error = None

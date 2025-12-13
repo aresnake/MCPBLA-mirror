@@ -2,8 +2,8 @@
 
 Two run modes are available for the MCP server:
 
-- **Mode A – Stub MCP only**: `BRIDGE_ENABLED=false` (default). No Blender bridge is loaded. The server exposes `/health`, `/tools`, `/tools/{tool}/invoke`, and stub handlers for scene snapshots. Tools include `ping`, `echo`, `scene_snapshot_stub`, and the in-memory scene-state helpers (`create_cube_stub`, `get_scene_state`, etc.).
-- **Mode B – Full Blender bridge**: `BRIDGE_ENABLED=true`. The live bridge, scenegraph, and event bus are wired. Endpoints `/blender/scene_snapshot` and `/bridge/event` operate against the live bridge. Requires a reachable Blender bridge handler (e.g., set `BLENDER_BRIDGE_ENABLED=true` and `BLENDER_BRIDGE_URL` when applicable).
+- **Mode A - Stub MCP only**: `BRIDGE_ENABLED=false` (default). No Blender bridge is loaded. The server exposes `/health`, `/tools`, `/tools/{tool}/invoke`, and stub handlers for scene snapshots. Tools include `ping`, `echo`, `scene_snapshot_stub`, and the in-memory scene-state helpers (`create_cube_stub`, `get_scene_state`, etc.).
+- **Mode B - Full Blender bridge**: `BRIDGE_ENABLED=true`. The live bridge, scenegraph, and event bus are wired. Endpoints `/blender/scene_snapshot` and `/bridge/event` operate against the live bridge. Requires a reachable Blender bridge handler configured via `BRIDGE_URL`.
 
 ## How to run
 
@@ -25,8 +25,10 @@ Bridge mode (requires a live bridge endpoint):
 
 PowerShell helpers are available in `scripts/`:
 - `scripts/run_mcp.ps1` - activates `.venv`, installs in editable mode, sets `BRIDGE_ENABLED=false`, and starts the server.
-- `scripts/run_blender_bridge.ps1` - same as above but sets `BRIDGE_ENABLED=true` (and `BLENDER_BRIDGE_ENABLED=true`) to activate the live bridge.
+- `scripts/run_blender_bridge.ps1` - same as above but sets `BRIDGE_ENABLED=true` to activate the live bridge.
 - `scripts/reset_all.ps1` - terminates MCP-related Python or Blender processes and clears typical MCP ports.
+
+Legacy env vars: `BLENDER_BRIDGE_ENABLED` and `BLENDER_BRIDGE_URL` are still supported but deprecated; prefer `BRIDGE_ENABLED` and `BRIDGE_URL`.
 
 ## Developer notes
 

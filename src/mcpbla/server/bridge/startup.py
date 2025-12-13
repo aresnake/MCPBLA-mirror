@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Callable, Optional
 
 from mcpbla.server.bridge.bridge_pool import get_bridge_pool  # backward compat
+from mcpbla.server.bridge.env import resolve_bridge_enabled
 from mcpbla.server.bridge.pool_v2 import get_bridge_pool_v2
 from mcpbla.server.bridge.router_v2 import RouterV2
 from mcpbla.server.bridge.scenegraph_live_v3 import SCENEGRAPH
@@ -26,13 +27,7 @@ def configure_bridge_from_env(enabled_override: Optional[bool] = None) -> bool:
     Requires BLENDER_BRIDGE_ENABLED to be truthy; BLENDER_BRIDGE_URL alone
     should not auto-configure to keep tests hermetic.
     """
-    enabled_env = str(os.getenv("BRIDGE_ENABLED") or os.getenv("BLENDER_BRIDGE_ENABLED") or "").lower() in {
-        "1",
-        "true",
-        "yes",
-        "on",
-    }
-    enabled = enabled_env if enabled_override is None else enabled_override
+    enabled = resolve_bridge_enabled(explicit=enabled_override)
     if not enabled:
         return False
 

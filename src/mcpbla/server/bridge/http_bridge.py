@@ -6,6 +6,8 @@ import uuid
 from typing import Any, Callable, Dict, Optional
 from urllib import error, request
 
+from mcpbla.server.bridge.env import resolve_bridge_enabled, resolve_bridge_url
+
 
 class HttpBridgeHandler:
     """HTTP bridge handler that forwards bridge routes to a Blender addon listener."""
@@ -48,19 +50,11 @@ class HttpBridgeHandler:
 
 def _resolve_bridge_url_from_env(force_enabled: bool = False) -> Optional[str]:
     """Return a bridge URL from env, with sensible defaults when enabled."""
-    # Explicit URL wins
-    explicit = os.getenv("BLENDER_BRIDGE_URL") or os.getenv("BRIDGE_URL") or ""
-    if explicit.strip():
-        return explicit.strip()
+    explicit = resolve_bridge_url()
+    if explicit:
+        return explicit
 
-    # Construct from host/port if provided or if bridge explicitly enabled
-    enabled_env = str(os.getenv("BRIDGE_ENABLED") or os.getenv("BLENDER_BRIDGE_ENABLED") or "").lower() in {
-        "1",
-        "true",
-        "yes",
-        "on",
-    }
-    enabled = enabled_env or force_enabled
+    enabled = resolve_bridge_enabled() or force_enabled
     host = os.getenv("BRIDGE_HOST") or os.getenv("BLENDER_BRIDGE_HOST") or "127.0.0.1"
     port = os.getenv("BRIDGE_PORT") or os.getenv("BLENDER_BRIDGE_PORT") or "9876"
     scheme = os.getenv("BRIDGE_SCHEME") or "http"

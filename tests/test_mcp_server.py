@@ -188,3 +188,35 @@ def test_bridge_status_unreachable(monkeypatch):
     assert data["reachable"] is False
     assert isinstance(data["last_error"], str)
     assert data["last_error"]
+
+
+def test_bridge_status_legacy_enabled(monkeypatch):
+    for var in ["BRIDGE_ENABLED", "BRIDGE_URL"]:
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("BLENDER_BRIDGE_ENABLED", "true")
+    monkeypatch.delenv("BLENDER_BRIDGE_URL", raising=False)
+
+    client = TestClient(create_app())
+    resp = client.get("/bridge/status")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["enabled"] is True
+    assert data["configured"] is False
+    assert data["reachable"] is False
+    assert data["last_error"] == "BRIDGE_URL is missing"
+
+
+def test_bridge_status_legacy_url(monkeypatch):
+    for var in ["BRIDGE_URL"]:
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("BRIDGE_ENABLED", "true")
+    monkeypatch.setenv("BLENDER_BRIDGE_URL", "http://127.0.0.1:59998")
+
+    client = TestClient(create_app())
+    resp = client.get("/bridge/status")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["url"] == "http://127.0.0.1:59998"
+    assert data["configured"] is True
+    assert data["reachable"] is False
+    assert isinstance(data["last_error"], str)

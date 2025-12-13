@@ -16,7 +16,6 @@ Write-Host "Installing mcpbla in editable mode..."
 pip install -e . | Out-Host
 
 $env:BRIDGE_ENABLED = "true"
-$env:BLENDER_BRIDGE_ENABLED = "true"
 if (-not $env:BRIDGE_URL) { $env:BRIDGE_URL = "http://127.0.0.1:8765/bridge/route" }
 Write-Host "[MCPBLA] Using BRIDGE_URL = $($env:BRIDGE_URL)"
 Write-Host "BRIDGE_ENABLED set to true (bridge mode). Starting MCP server with Blender bridge enabled..."

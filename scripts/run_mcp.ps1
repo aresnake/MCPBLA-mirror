@@ -16,7 +16,6 @@ Write-Host "Installing mcpbla in editable mode..."
 pip install -e . | Out-Host
 
 $env:BRIDGE_ENABLED = "false"
-$env:BLENDER_BRIDGE_ENABLED = ""
 Write-Host "BRIDGE_ENABLED set to false (stub mode). Starting MCP server..."
 
 python -m mcpbla.server.mcp_server
