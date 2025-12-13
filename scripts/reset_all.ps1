@@ -36,7 +36,7 @@ foreach ($pid in $pids) {
         Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
         Write-Host "Stopped process PID $pid"
     } catch {
-        Write-Warning "Could not stop PID $pid: $($_.Exception.Message)"
+        Write-Warning "Could not stop PID ${pid}: $($_.Exception.Message)"
     }
 }
 
