@@ -14,14 +14,18 @@ python -m venv .venv
 pip install -e .
 ```
 
-2) Start the MCP server:
-- Stub mode (default): `BRIDGE_ENABLED=false python -m mcpbla.server.mcp_server`
-- Bridge mode: `BRIDGE_ENABLED=true BLENDER_BRIDGE_ENABLED=true python -m mcpbla.server.mcp_server`
+2) Start the MCP server and run the smoke check (copy/paste):
+- Terminal 1 (stub mode): `pwsh -File .\scripts\run_server_stub.ps1`
+- Terminal 2 (smoke): `pwsh -File .\scripts\smoke_http.ps1`
+- Stop the server: press `Ctrl+C` in Terminal 1 when finished.
+
+Bridge mode (requires a live bridge endpoint):
+- Set `BRIDGE_URL`, then run: `pwsh -File .\scripts\run_server_bridge.ps1`
 
 PowerShell helpers are available in `scripts/`:
-- `scripts/run_mcp.ps1` – activates `.venv`, installs in editable mode, sets `BRIDGE_ENABLED=false`, and starts the server.
-- `scripts/run_blender_bridge.ps1` – same as above but sets `BRIDGE_ENABLED=true` (and `BLENDER_BRIDGE_ENABLED=true`) to activate the live bridge.
-- `scripts/reset_all.ps1` – terminates MCP-related Python or Blender processes and clears typical MCP ports.
+- `scripts/run_mcp.ps1` - activates `.venv`, installs in editable mode, sets `BRIDGE_ENABLED=false`, and starts the server.
+- `scripts/run_blender_bridge.ps1` - same as above but sets `BRIDGE_ENABLED=true` (and `BLENDER_BRIDGE_ENABLED=true`) to activate the live bridge.
+- `scripts/reset_all.ps1` - terminates MCP-related Python or Blender processes and clears typical MCP ports.
 
 ## Developer notes
 
