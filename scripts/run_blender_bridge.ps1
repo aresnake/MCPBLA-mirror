@@ -17,9 +17,8 @@ pip install -e . | Out-Host
 
 $env:BRIDGE_ENABLED = "true"
 $env:BLENDER_BRIDGE_ENABLED = "true"
-if (-not $env:BRIDGE_HOST) { $env:BRIDGE_HOST = "127.0.0.1" }
-if (-not $env:BRIDGE_PORT) { $env:BRIDGE_PORT = "9876" }
-$env:BRIDGE_URL = "http://$($env:BRIDGE_HOST):$($env:BRIDGE_PORT)"
+if (-not $env:BRIDGE_URL) { $env:BRIDGE_URL = "http://127.0.0.1:8765/bridge/route" }
+Write-Host "[MCPBLA] Using BRIDGE_URL = $($env:BRIDGE_URL)"
 Write-Host "BRIDGE_ENABLED set to true (bridge mode). Starting MCP server with Blender bridge enabled..."
 
 python -m mcpbla.server.mcp_server
