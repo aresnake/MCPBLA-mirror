@@ -40,7 +40,7 @@ if (-not $statusResp) {
 }
 
 try {
-    $statusJson = $statusResp.Content | ConvertFrom-Json -ErrorAction Stop
+$statusJson = $statusResp.Content | ConvertFrom-Json -ErrorAction Stop
 } catch {
     Fail "Could not parse /status response."
 }
@@ -49,6 +49,8 @@ $bridge = $statusJson.bridge
 $server = $statusJson.server
 $tools = $statusJson.tools
 $version = $statusJson.version
+$fail = $false
+$hint = $null
 
 Write-Host ("Health: HTTP {0}" -f $healthStatus)
 Write-Host ("Bridge: enabled={0} configured={1} reachable={2} url={3}" -f $bridge.enabled, $bridge.configured, $bridge.reachable, ($bridge.url -as [string]))
@@ -56,8 +58,23 @@ Write-Host ("Tools: count={0}" -f $tools.count)
 Write-Host ("Uptime: {0}s" -f $server.uptime_seconds)
 Write-Host ("Git SHA: {0}" -f ($version.git_sha -as [string]))
 
+$fail = $fail -or ($healthStatus -ne 200)
 if ($statusJson.ok -ne $true) {
-    Fail "Status reported not ok."
+    $fail = $true
+    $hint = "Status not ok."
+}
+if ($bridge.enabled -eq $true -and $bridge.configured -eq $false) {
+    $fail = $true
+    $hint = "Bridge enabled but not configured. Set BRIDGE_URL or start the bridge."
+}
+if ($bridge.enabled -eq $true -and $bridge.configured -eq $true -and $bridge.reachable -eq $false) {
+    $fail = $true
+    $hint = "Bridge unreachable: start Blender bridge or fix BRIDGE_URL."
+}
+
+if ($fail) {
+    if (-not $hint) { $hint = "Doctor checks failed." }
+    Fail $hint
 }
 
 Write-Host "Doctor checks passed."
